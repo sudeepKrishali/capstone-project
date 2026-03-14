@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ProfileBook.API.Data;
+using ProfileBook.API.Services;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -59,6 +60,10 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddCors(options => options.AddPolicy("AllowAngular",
     p => p.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader()));
 
+
+// Change this line in Program.cs
+builder.Services.AddScoped<ITokenService, TokenService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -66,6 +71,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+// Change this line in Program.cs
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAngular");

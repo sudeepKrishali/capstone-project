@@ -1,0 +1,24 @@
+<div class="newsfeed-container">
+  <h2>Newsfeed</h2>
+  
+  <div *ngFor="let post of posts" class="post-card">
+    <div class="post-header">
+      <img [src]="imageBaseUrl + post.user?.profileImage" class="avatar">
+      <span>{{ post.user?.username }}</span>
+    </div>
+
+    <p>{{ post.content }}</p>
+    
+    <img *ngIf="post.postImage" [src]="imageBaseUrl + post.postImage" class="post-img">
+
+    <div class="post-actions">
+      <button (click)="onLike(post.postId)">Like ({{ post.likes.length }})</button>
+    </div>
+
+    <div class="comments-section">
+      <div *ngFor="let comment of post.comments">
+        <strong>User {{comment.userId}}:</strong> {{ comment.text }}
+      </div>
+    </div>
+  </div>
+</div>
