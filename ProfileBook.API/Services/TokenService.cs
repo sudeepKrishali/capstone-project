@@ -4,18 +4,16 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
+
 namespace ProfileBook.API.Services;
 
-public class TokenService
+public class TokenService : ITokenService
 {
     private readonly SymmetricSecurityKey _key;
 
     public TokenService(IConfiguration config)
     {
-        // 1. Get the key from appsettings.json
         var jwtKey = config["Jwt:Key"] ?? "ubP/DBmmk2TcjuT5NcHqGaWSlOk7RPmxwokWkhq2pjCCp02LJHKqZ4frgHXW+VNHAEKEX4MBuxwDWdIPVvKDZg==";
-
-        // 2. Initialize the field
         _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
     }
 
@@ -25,7 +23,7 @@ public class TokenService
         {
             new(ClaimTypes.Name, user.Username!),
             new(ClaimTypes.Role, user.Role!),
-            new(ClaimTypes.NameIdentifier, user.UserId.ToString()) // Add this for the PostController!
+            new(ClaimTypes.NameIdentifier, user.UserId.ToString())
         };
 
         var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha512Signature);

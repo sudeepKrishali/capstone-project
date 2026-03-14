@@ -15,3 +15,8 @@ obj/
 # NuGet Packages
 *.nupkg
 packages/
+
+# Angular
+**/node_modules/
+**/dist/
+.angular/

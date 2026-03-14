@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController(ApplicationDbContext context, TokenService tokenService) : ControllerBase
+public class AuthController(ApplicationDbContext context, ITokenService tokenService) : ControllerBase
 {
     [HttpPost("register")]
     [Consumes("multipart/form-data")] 
