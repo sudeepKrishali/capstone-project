@@ -18,7 +18,9 @@ namespace ProfileBook.API.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-           // Configuring the Message relationships (One-to-Many) 
+            base.OnModelCreating(modelBuilder);
+
+            // Configuring the Message relationships
             modelBuilder.Entity<Message>()
                 .HasOne(m => m.Sender)
                 .WithMany(u => u.SentMessages)
@@ -29,6 +31,19 @@ namespace ProfileBook.API.Data
                 .HasOne(m => m.Receiver)
                 .WithMany(u => u.ReceivedMessages)
                 .HasForeignKey(m => m.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configuring the Report relationships
+            modelBuilder.Entity<Report>()
+                .HasOne(r => r.ReportingUser)
+                .WithMany()
+                .HasForeignKey(r => r.ReportingUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Report>()
+                .HasOne(r => r.ReportedUser)
+                .WithMany()
+                .HasForeignKey(r => r.ReportedUserId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }
