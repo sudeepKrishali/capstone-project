@@ -1,0 +1,17 @@
+<h2>Register</h2>
+<form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+  <div>
+    <label>Username:</label>
+    <input type="text" formControlName="username">
+  </div>
+  <div>
+    <label>Password:</label>
+    <input type="password" formControlName="password">
+  </div>
+  <div>
+    <label>Profile Image:</label>
+    <input type="file" (change)="onFileSelected($event)">
+  </div>
+  <button type="submit" [disabled]="registerForm.invalid">Register</button>
+</form>
+<p>Already have an account? <a routerLink="/login">login here</a></p>

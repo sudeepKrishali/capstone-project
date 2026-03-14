@@ -20,3 +20,17 @@ packages/
 **/node_modules/
 **/dist/
 .angular/
+
+# Node dependencies
+**/ProfileBook.UI/node_modules/
+
+# Angular build output
+**/ProfileBook.UI/dist/
+**/ProfileBook.UI/tmp/
+**/ProfileBook.UI/out-tsc/
+**/ProfileBook.UI/bazel-out/
+
+# IDE and System files
+**/ProfileBook.UI/.editorconfig
+**/ProfileBook.UI/.vscode/
+.vs/
