@@ -1,12 +1,12 @@
 <div class="messages-container">
   <ng-container *ngIf="chatUserId; else inbox">
-    <div class="chat-header">
-      <a routerLink="/messages" class="back-link">← Back</a>
-      <h2>Chat with {{ otherUser?.username || 'User' }}</h2>
+    <div class="chat-header d-flex align-items-center gap-2 mb-2">
+      <a routerLink="/messages" class="back-link">&larr; Back</a>
+      <h2 class="h5 mb-0">Chat with {{ otherUser?.username || 'User' }}</h2>
     </div>
-    <div *ngIf="loading" class="loading">Loading...</div>
+    <div *ngIf="loading" class="loading small text-muted">Loading...</div>
     <div class="chat-area">
-      <div class="messages-list">
+      <div class="messages-list" #messagesList>
         <div
           *ngFor="let msg of messages"
           [class.sent]="msg.senderId === currentUserId"
@@ -14,25 +14,26 @@
           class="message-bubble"
         >
           <span class="msg-text">{{ msg.messageContent }}</span>
-          <span class="msg-time">{{ msg.timeStamp | date:'short' }}</span>
+          <span class="msg-time">{{ msg.timeStamp | date: 'short' }}</span>
         </div>
       </div>
       <div class="send-area">
         <input
           type="text"
+          class="form-control"
           [(ngModel)]="newMessage"
           placeholder="Type a message..."
           (keyup.enter)="sendMessage()"
         />
-        <button (click)="sendMessage()">Send</button>
+        <button class="btn btn-primary" (click)="sendMessage()">Send</button>
       </div>
     </div>
   </ng-container>
   <ng-template #inbox>
     <div class="inbox-placeholder">
-      <h2>Messages</h2>
+      <h2 class="h4">Messages</h2>
       <p>Search for users to start a conversation.</p>
-      <button (click)="goToSearch()">Search Users</button>
+      <button class="btn btn-primary" (click)="goToSearch()">Search Users</button>
     </div>
   </ng-template>
 </div>

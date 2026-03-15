@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { UserService } from '../../services/user';
 import { AuthService } from '../../services/auth';
 import { ReportService } from '../../services/report';
@@ -25,7 +25,8 @@ export class SearchUsersComponent {
     private userService: UserService,
     private authService: AuthService,
     private reportService: ReportService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   get currentUserId(): number | null {
@@ -47,9 +48,11 @@ export class SearchUsersComponent {
         this.users = data;
         this.loading = false;
         this.hasSearched = true;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.loading = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -61,11 +64,13 @@ export class SearchUsersComponent {
   openReportForm(user: User): void {
     this.reportingUser = user;
     this.reportReason = '';
+    this.cdr.detectChanges();
   }
 
   cancelReport(): void {
     this.reportingUser = null;
     this.reportReason = '';
+    this.cdr.detectChanges();
   }
 
   submitReport(): void {
@@ -76,10 +81,12 @@ export class SearchUsersComponent {
       next: () => {
         alert('User reported successfully.');
         this.cancelReport();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(err);
         alert('Failed to submit report.');
+        this.cdr.detectChanges();
       },
     });
   }

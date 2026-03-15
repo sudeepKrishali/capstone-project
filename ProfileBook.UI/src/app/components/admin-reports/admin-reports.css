@@ -1,11 +1,10 @@
 .admin-container {
   max-width: 800px;
   margin: 2rem auto;
-  padding: 1rem;
 }
 
 .admin-container h2 {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 .no-reports {
@@ -15,13 +14,14 @@
 }
 
 .report-card {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  background: #fafafa;
+  border-radius: 0.5rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.75rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
 }
 
 .report-info p {
   margin: 0.25rem 0;
 }
+

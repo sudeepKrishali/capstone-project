@@ -1,74 +1,29 @@
 .admin-groups-container {
   max-width: 900px;
-  margin: 20px auto;
-  padding: 20px;
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.create-group,
-.assign-user {
-  margin-bottom: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
-input[type='text'],
-select {
-  padding: 6px 10px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  min-width: 200px;
-}
-
-button {
-  padding: 6px 14px;
-  border: none;
-  border-radius: 4px;
-  background-color: #007bff;
-  color: #fff;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #0056b3;
+  margin: 2rem auto;
 }
 
 .groups-list {
-  margin-top: 10px;
+  margin-top: 0.5rem;
 }
 
 .group-card {
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  padding: 10px 14px;
-  margin-bottom: 10px;
-  background-color: #fafafa;
-}
-
-.group-card h4 {
-  margin-top: 0;
+  border-radius: 0.5rem;
 }
 
 .group-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  background-color: #f8fafc;
 }
 
 .btn-danger {
-  background-color: #e74c3c;
+  background-color: #dc3545;
 }
 
 .btn-danger:hover {
-  background-color: #c0392b;
+  background-color: #bb2d3b;
 }
 
 .error {
   color: #c0392b;
-  margin-bottom: 10px;
 }
 

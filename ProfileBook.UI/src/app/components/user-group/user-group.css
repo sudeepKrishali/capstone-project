@@ -1,21 +1,48 @@
 .user-group-container {
   max-width: 600px;
-  margin: 20px auto;
-  padding: 20px;
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  margin: 2rem auto;
 }
 
 .group-card {
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  padding: 10px 14px;
-  background-color: #fafafa;
+  border-radius: 0.5rem;
 }
 
 .error {
   color: #c0392b;
   margin-bottom: 10px;
 }
+
+.group-messages {
+  border-radius: 0.5rem;
+}
+
+.group-messages-list {
+  max-height: 70vh;
+  min-height: 280px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.group-message-item {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  max-width: 80%;
+}
+
+.group-message-item .msg-text {
+  word-break: break-word;
+}
+
+.group-message-item.from-current {
+  background-color: #e7f3ff; /* light blue */
+  margin-left: auto;
+  text-align: right;
+}
+
+.group-message-item.from-other {
+  background-color: #f3f4f6;
+  margin-right: auto;
+}
+
+
 

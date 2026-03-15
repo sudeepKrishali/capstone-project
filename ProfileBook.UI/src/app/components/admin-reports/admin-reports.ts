@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ReportService } from '../../services/report';
 import { UserService } from '../../services/user';
 import { Report } from '../../models';
@@ -14,7 +14,8 @@ export class AdminReportsComponent implements OnInit {
 
   constructor(
     private reportService: ReportService,
-    private userService: UserService
+    private userService: UserService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -23,8 +24,14 @@ export class AdminReportsComponent implements OnInit {
 
   loadReports(): void {
     this.reportService.getReports().subscribe({
-      next: (reports) => (this.reports = reports),
-      error: (err) => console.error('Error fetching reports', err),
+      next: (reports) => {
+        this.reports = reports;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error fetching reports', err);
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -45,8 +52,12 @@ export class AdminReportsComponent implements OnInit {
         this.reports = this.reports.filter(
           (r) => r.reportedUserId !== report.reportedUserId
         );
+        this.cdr.detectChanges();
       },
-      error: (err) => console.error('Error deleting user', err),
+      error: (err) => {
+        console.error('Error deleting user', err);
+        this.cdr.detectChanges();
+      },
     });
   }
 }

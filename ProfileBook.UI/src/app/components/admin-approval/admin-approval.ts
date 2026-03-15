@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { PostService } from '../../services/post';
 import { OnInit } from '@angular/core';
 
@@ -11,7 +11,10 @@ import { OnInit } from '@angular/core';
 export class AdminApprovalComponent implements OnInit {
   pendingPosts: any[] = [];
 
-  constructor(private postService: PostService) {}
+  constructor(
+    private postService: PostService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.loadPendingPosts();
@@ -19,7 +22,10 @@ export class AdminApprovalComponent implements OnInit {
 
   loadPendingPosts() {
     this.postService.getPendingPosts().subscribe({
-      next: (posts) => this.pendingPosts = posts,
+      next: (posts) => {
+        this.pendingPosts = posts;
+        this.cdr.detectChanges();
+      },
       error: (err) => console.error('Error fetching pending posts', err)
     });
   }

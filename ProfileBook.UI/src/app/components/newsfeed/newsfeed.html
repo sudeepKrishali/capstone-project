@@ -1,40 +1,78 @@
-<div class="container">
-
-  <hr>
-  <div *ngIf="loading" class="loading">
+<div class="newsfeed-container container py-3">
+  <div *ngIf="loading" class="loading text-muted small mb-2">
     Loading posts...
   </div>
-  
-  <div *ngIf="!loading && posts.length === 0">
+
+  <div *ngIf="!loading && posts.length === 0" class="alert alert-info">
     No posts to show yet.
   </div>
 
-  <div *ngFor="let post of posts" class="post-card">
-    <div class="post-header">
-      <img [src]="imageBaseUrl + post.user?.profileImage" class="avatar" alt="profile">
-      <strong>{{ post.user?.username }}</strong>
-    </div>
-    
-    <p>{{ post.content }}</p>
-    
-    <img *ngIf="post.postImage" [src]="imageBaseUrl + post.postImage" class="post-image">
-    
-    <div class="post-actions">
-    <button (click)="onLike(post.postId)">Like ({{ post.likes.length || 0 }})</button>
-  </div>
-
-  <div class="comments-section">
-    <div *ngFor="let comment of post.comments" class="comment">
-      <strong>{{ comment.user?.username || 'User' }}:</strong> {{ comment.text }}
+  <div *ngFor="let post of posts" class="post-card card shadow-sm mb-3">
+    <div class="card-header d-flex align-items-center gap-2">
+      <img
+        [src]="imageBaseUrl + post.user?.profileImage"
+        class="avatar"
+        alt="profile"
+      />
+      <div class="d-flex flex-column">
+        <strong>{{ post.user?.username || 'User' }}</strong>
+      </div>
     </div>
 
-    <div class="comment-input">
-      <input #commentInput type="text" placeholder="Write a comment...">
-      <button (click)="onComment(post.postId, commentInput.value); commentInput.value=''">
-        Post
-      </button>
+    <div class="card-body">
+      <p class="mb-2">{{ post.content }}</p>
+
+      <img
+        *ngIf="post.postImage"
+        [src]="imageBaseUrl + post.postImage"
+        class="post-image img-fluid rounded mb-2"
+        alt="Post image"
+      />
+
+      <div class="post-actions mb-2">
+        <button
+          type="button"
+          class="btn btn-sm"
+          [ngClass]="{
+            'btn-primary': isPostLikedByCurrentUser(post),
+            'btn-outline-primary': !isPostLikedByCurrentUser(post)
+          }"
+          (click)="onLike(post.postId)"
+        >
+          Like ({{ post.likes.length || 0 }})
+        </button>
+      </div>
+
+      <div class="comments-section">
+        <div *ngFor="let comment of post.comments" class="comment mb-1">
+          <strong>
+            <span *ngIf="comment.userId === currentUserId; else otherUser">
+              You
+            </span>
+            <ng-template #otherUser>
+              {{ comment.user?.username || 'User' }}
+            </ng-template>
+            :
+          </strong>
+          <span class="ms-1">{{ comment.text }}</span>
+        </div>
+
+        <div class="comment-input input-group mt-2">
+          <input
+            #commentInput
+            type="text"
+            class="form-control"
+            placeholder="Write a comment..."
+          />
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="onComment(post.postId, commentInput.value); commentInput.value=''"
+          >
+            Post
+          </button>
+        </div>
+      </div>
     </div>
-    
-  </div>
   </div>
 </div>

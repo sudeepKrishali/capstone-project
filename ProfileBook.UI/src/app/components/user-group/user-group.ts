@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { Group, GroupMessage } from '../../models';
 import { GroupService } from '../../services/group';
 import { Router } from '@angular/router';
@@ -18,10 +18,13 @@ export class UserGroupComponent implements OnInit {
   newGroupMessage = '';
   currentUserId: number | null = null;
 
+  @ViewChild('groupMessagesList') groupMessagesList?: ElementRef<HTMLDivElement>;
+
   constructor(
     private groupService: GroupService,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -52,6 +55,8 @@ export class UserGroupComponent implements OnInit {
     this.groupService.getMyGroupMessages().subscribe({
       next: (msgs) => {
         this.groupMessages = msgs;
+        this.cdr.detectChanges();
+        this.scrollToBottom();
       },
       error: () => {
         this.groupMessages = [];
@@ -68,11 +73,23 @@ export class UserGroupComponent implements OnInit {
       next: (msg) => {
         this.groupMessages = [...this.groupMessages, msg];
         this.newGroupMessage = '';
+        this.cdr.detectChanges();
+        this.scrollToBottom();
       },
       error: () => {
         alert('Failed to send group message.');
       },
     });
+  }
+
+  private scrollToBottom(): void {
+    if (!this.groupMessagesList) return;
+    try {
+      const el = this.groupMessagesList.nativeElement;
+      el.scrollTop = el.scrollHeight;
+    } catch {
+      // ignore
+    }
   }
 }
 

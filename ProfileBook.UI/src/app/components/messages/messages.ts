@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from '../../services/message';
 import { UserService } from '../../services/user';
@@ -18,6 +18,8 @@ export class MessagesComponent implements OnInit {
   loading = false;
   chatUserId: number | null = null;
 
+  @ViewChild('messagesList') messagesList?: ElementRef<HTMLDivElement>;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -29,6 +31,16 @@ export class MessagesComponent implements OnInit {
 
   get currentUserId(): number | null {
     return this.authService.getUserId();
+  }
+
+  private scrollToBottom(): void {
+    if (!this.messagesList) return;
+    try {
+      const el = this.messagesList.nativeElement;
+      el.scrollTop = el.scrollHeight;
+    } catch {
+      // ignore
+    }
   }
 
   ngOnInit(): void {
@@ -65,6 +77,7 @@ export class MessagesComponent implements OnInit {
             this.messages = msgs;
             this.loading = false;
             this.cdr.detectChanges();
+            this.scrollToBottom();
           },
           error: (err) => {
             console.error('[MessagesComponent] Error loading messages', err);
@@ -94,6 +107,7 @@ export class MessagesComponent implements OnInit {
         this.messages = [...this.messages, msg];
         this.newMessage = '';
         this.cdr.detectChanges();
+        this.scrollToBottom();
       },
       error: (err) => {
         console.error(err);

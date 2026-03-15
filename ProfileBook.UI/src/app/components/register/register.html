@@ -1,17 +1,38 @@
-<h2>Register</h2>
-<form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-  <div>
-    <label>Username:</label>
-    <input type="text" formControlName="username">
+<div class="register-container">
+  <div class="card shadow-sm register-card">
+    <div class="card-body">
+      <h2 class="h4 mb-3 text-center">
+        <span class="register-brand">ProfileBook</span> Register
+      </h2>
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-control" formControlName="username" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" formControlName="password" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Profile image</label>
+          <input
+            type="file"
+            class="form-control"
+            (change)="onFileSelected($event)"
+          />
+        </div>
+        <button
+          type="submit"
+          class="btn btn-primary w-100"
+          [disabled]="registerForm.invalid"
+        >
+          Register
+        </button>
+      </form>
+      <p class="mt-3 mb-0 text-center small">
+        Already have an account?
+        <a routerLink="/login">Login here</a>
+      </p>
+    </div>
   </div>
-  <div>
-    <label>Password:</label>
-    <input type="password" formControlName="password">
-  </div>
-  <div>
-    <label>Profile Image:</label>
-    <input type="file" (change)="onFileSelected($event)">
-  </div>
-  <button type="submit" [disabled]="registerForm.invalid">Register</button>
-</form>
-<p>Already have an account? <a routerLink="/login">login here</a></p>
+</div>
