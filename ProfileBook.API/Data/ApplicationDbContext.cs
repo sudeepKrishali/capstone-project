@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ProfileBook.API.Models;
 
 namespace ProfileBook.API.Data
@@ -13,6 +13,7 @@ namespace ProfileBook.API.Data
         public DbSet<Message> Messages { get; set; }
         public DbSet<Report> Reports { get; set; }
         public DbSet<Group> Groups { get; set; }
+        public DbSet<GroupMessage> GroupMessages { get; set; }
         public DbSet<Like> Likes { get; set; }
         public DbSet<Comment> Comments { get; set; }
 
@@ -45,6 +46,19 @@ namespace ProfileBook.API.Data
                 .WithMany()
                 .HasForeignKey(r => r.ReportedUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Disable cascade delete for comments to prevent circular paths
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Group>()
+                .HasMany(g => g.GroupMembers!)
+                .WithOne(u => u.Group)
+                .HasForeignKey(u => u.GroupId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

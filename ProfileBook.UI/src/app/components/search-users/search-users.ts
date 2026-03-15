@@ -1,0 +1,86 @@
+import { Component } from '@angular/core';
+import { UserService } from '../../services/user';
+import { AuthService } from '../../services/auth';
+import { ReportService } from '../../services/report';
+import { Router } from '@angular/router';
+import { User } from '../../models';
+import { environment } from '../../../environment';
+
+@Component({
+  selector: 'app-search-users',
+  standalone: false,
+  templateUrl: './search-users.html',
+  styleUrl: './search-users.css',
+})
+export class SearchUsersComponent {
+  searchTerm = '';
+  users: User[] = [];
+  loading = false;
+  hasSearched = false;
+  reportingUser: User | null = null;
+  reportReason = '';
+  imageBaseUrl = environment.apiUrl.replace('/api', '');
+
+  constructor(
+    private userService: UserService,
+    private authService: AuthService,
+    private reportService: ReportService,
+    private router: Router
+  ) {}
+
+  get currentUserId(): number | null {
+    return this.authService.getUserId();
+  }
+
+  search(): void {
+    const term = this.searchTerm.trim();
+    if (!term) {
+      this.users = [];
+      this.loading = false;
+      this.cancelReport();
+      this.hasSearched = false;
+      return;
+    }
+    this.loading = true;
+    this.userService.searchUsers(term).subscribe({
+      next: (data: User[]) => {
+        this.users = data;
+        this.loading = false;
+        this.hasSearched = true;
+      },
+      error: () => {
+        this.loading = false;
+      },
+    });
+  }
+
+  messageUser(user: User): void {
+    this.router.navigate(['/messages', 'chat', user.userId]);
+  }
+
+  openReportForm(user: User): void {
+    this.reportingUser = user;
+    this.reportReason = '';
+  }
+
+  cancelReport(): void {
+    this.reportingUser = null;
+    this.reportReason = '';
+  }
+
+  submitReport(): void {
+    const reported = this.reportingUser;
+    const currentId = this.currentUserId;
+    if (!reported || currentId == null) return;
+    this.reportService.reportUser(reported.userId, currentId, this.reportReason || undefined).subscribe({
+      next: () => {
+        alert('User reported successfully.');
+        this.cancelReport();
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Failed to submit report.');
+      },
+    });
+  }
+}

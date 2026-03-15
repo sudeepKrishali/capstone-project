@@ -4,6 +4,8 @@ export interface User {
   password?: string;
   role?: string;
   profileImage?: string;
+  groupId?: number;
+  group?: Group;
   posts?: Post[];
   sentMessages?: Message[];
   receivedMessages?: Message[];
@@ -21,11 +23,14 @@ export interface Post {
 }
 
 export interface Comment {
-  id: number;
-  text: string;
-  timeStamp: Date;
+  commentId: number;
   postId: number;
   userId: number;
+  text: string;
+  user?: {
+    username: string;
+    profileImage?: string;
+  };
 }
 
 export interface Like {
@@ -48,6 +53,15 @@ export interface Group {
   groupId: number;
   groupName?: string;
   groupMembers?: User[];
+}
+
+export interface GroupMessage {
+  groupMessageId: number;
+  groupId: number;
+  senderId: number;
+  senderName?: string;
+  messageContent?: string;
+  timeStamp: Date;
 }
 
 export interface Report {

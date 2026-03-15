@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Moq;
 using ProfileBook.API.Controllers;
 using ProfileBook.API.Models;
@@ -29,7 +29,7 @@ namespace ProfileBook.Tests.Controllers
             var controller = new AuthController(_context, _mockTokenService.Object);
 
             // Using your specific RegisterDto and the Mock File Helper
-            var registerDto = new AuthController.RegisterDto
+            var registerDto = new RegisterDto
             {
                 Username = "testuser",
                 Password = "Password123",
@@ -58,7 +58,11 @@ namespace ProfileBook.Tests.Controllers
             _mockTokenService.Setup(s => s.CreateToken(It.IsAny<User>())).Returns("fake-jwt-token");
 
             var controller = new AuthController(_context, _mockTokenService.Object);
-            var loginDto = new User { Username = "validuser", Password = "correctpassword" };
+            var loginDto = new LoginDto
+            {
+                Username = "validuser",
+                Password = "correctpassword"
+            };
 
             // Act
             var result = await controller.Login(loginDto);

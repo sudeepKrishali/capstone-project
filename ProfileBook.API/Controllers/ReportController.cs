@@ -18,7 +18,7 @@ namespace ProfileBook.API.Controllers
             return await context.Reports.ToListAsync(); 
         }
 
-        // POST: api/Report (User: Report inappropriate behavior)
+        // POST: api/Report 
         [HttpPost]
         public async Task<ActionResult<Report>> ReportUser(Report report)
         {

@@ -1,24 +1,40 @@
-<div class="newsfeed-container">
-  <h2>Newsfeed</h2>
+<div class="container">
+
+  <hr>
+  <div *ngIf="loading" class="loading">
+    Loading posts...
+  </div>
   
+  <div *ngIf="!loading && posts.length === 0">
+    No posts to show yet.
+  </div>
+
   <div *ngFor="let post of posts" class="post-card">
     <div class="post-header">
-      <img [src]="imageBaseUrl + post.user?.profileImage" class="avatar">
-      <span>{{ post.user?.username }}</span>
+      <img [src]="imageBaseUrl + post.user?.profileImage" class="avatar" alt="profile">
+      <strong>{{ post.user?.username }}</strong>
     </div>
-
+    
     <p>{{ post.content }}</p>
     
-    <img *ngIf="post.postImage" [src]="imageBaseUrl + post.postImage" class="post-img">
-
+    <img *ngIf="post.postImage" [src]="imageBaseUrl + post.postImage" class="post-image">
+    
     <div class="post-actions">
-      <button (click)="onLike(post.postId)">Like ({{ post.likes.length }})</button>
+    <button (click)="onLike(post.postId)">Like ({{ post.likes.length || 0 }})</button>
+  </div>
+
+  <div class="comments-section">
+    <div *ngFor="let comment of post.comments" class="comment">
+      <strong>{{ comment.user?.username || 'User' }}:</strong> {{ comment.text }}
     </div>
 
-    <div class="comments-section">
-      <div *ngFor="let comment of post.comments">
-        <strong>User {{comment.userId}}:</strong> {{ comment.text }}
-      </div>
+    <div class="comment-input">
+      <input #commentInput type="text" placeholder="Write a comment...">
+      <button (click)="onComment(post.postId, commentInput.value); commentInput.value=''">
+        Post
+      </button>
     </div>
+    
+  </div>
   </div>
 </div>

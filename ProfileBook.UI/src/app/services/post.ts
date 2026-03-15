@@ -27,4 +27,12 @@ export class PostService {
   addComment(postId: number, text: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/${postId}/comment`, { text });
   }
+
+  getPendingPosts(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/pending`);
+  }
+
+  approvePost(postId: number): Observable<any> {
+    return this.http.put(`${this.baseUrl}/approve/${postId}`, {});
+  }
 }

@@ -11,16 +11,14 @@ public class PostController(ApplicationDbContext context) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Post>>> GetApprovedPosts() =>
-        await context.Posts.Where(p => p.Status == "Approved").Include(p => p.User).ToListAsync();
-
-    //[HttpPost]
-    //public async Task<ActionResult<Post>> CreatePost(Post post)
-    //{
-    //    post.Status = "Pending"; 
-    //    context.Posts.Add(post);
-    //    await context.SaveChangesAsync();
-    //    return CreatedAtAction(nameof(GetApprovedPosts), new { id = post.PostId }, post);
-    //}
+    await context.Posts
+        .Where(p => p.Status == "Approved")
+        .Include(p => p.User) 
+        .Include(p => p.Likes)
+        .Include(p => p.Comments)
+            .ThenInclude(c => c.User)
+        .ToListAsync();
+  
 
     [Authorize(Roles = "Admin")]
     [HttpPut("approve/{id}")]
@@ -79,21 +77,24 @@ public class PostController(ApplicationDbContext context) : ControllerBase
         public IFormFile? Image { get; set; }
     }
 
-    [Authorize] // Ensure the user is logged in
+    [Authorize]
     [HttpPost("{postId}/like")]
     public async Task<IActionResult> LikePost(int postId)
     {
-        // 1. Get the current user's ID from the JWT token
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null) return Unauthorized("Invalid user session.");
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                          ?? User.FindFirst(ClaimTypes.Name)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+
         int userId = int.Parse(userIdClaim);
+        var existingLike = await context.Likes
+            .FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
 
-        // 2. Prevent duplicate likes 
-        var alreadyLiked = await context.Likes.AnyAsync(l => l.PostId == postId && l.UserId == userId);
-        if (alreadyLiked) return BadRequest("You have already liked this post.");
+        if (existingLike == null)
+            context.Likes.Add(new Like { PostId = postId, UserId = userId });
+        else
+            context.Likes.Remove(existingLike);
 
-        var like = new Like { PostId = postId, UserId = userId };
-        context.Likes.Add(like);
         await context.SaveChangesAsync();
         return Ok();
     }
@@ -102,16 +103,16 @@ public class PostController(ApplicationDbContext context) : ControllerBase
     [HttpPost("{postId}/comment")]
     public async Task<IActionResult> AddComment(int postId, [FromBody] CommentDto commentDto)
     {
-        // 1. Get the current user's ID
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null) return Unauthorized("Invalid user session.");
-        int userId = int.Parse(userIdClaim);
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                          ?? User.FindFirst(ClaimTypes.Name)?.Value;
+
+        if (userIdClaim == null) return Unauthorized();
 
         var comment = new Comment
         {
             PostId = postId,
             Text = commentDto.Text,
-            UserId = userId, 
+            UserId = int.Parse(userIdClaim),
             TimeStamp = DateTime.UtcNow
         };
 
@@ -119,6 +120,15 @@ public class PostController(ApplicationDbContext context) : ControllerBase
         await context.SaveChangesAsync();
         return Ok(comment);
     }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("pending")]
+    public async Task<ActionResult<IEnumerable<Post>>> GetPendingPosts() =>
+    await context.Posts
+        .Where(p => p.Status == "Pending")
+        .Include(p => p.User)
+        .ToListAsync();
+
     public class CommentDto
     {
         public string Text { get; set; } = string.Empty;

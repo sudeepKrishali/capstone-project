@@ -1,0 +1,35 @@
+<div class="admin-container">
+  <h2>User Reports</h2>
+  <div *ngIf="reports.length === 0" class="no-reports">
+    No reports to display.
+  </div>
+
+  <div *ngFor="let report of reports" class="report-card">
+    <div class="report-info">
+      <p><strong>Report ID:</strong> {{ report.reportId }}</p>
+      <p>
+        <strong>Reported User ID:</strong> {{ report.reportedUserId }}
+        <span *ngIf="report.reportedUser">
+          ({{ report.reportedUser.username }})
+        </span>
+      </p>
+      <p>
+        <strong>Reported by User ID:</strong> {{ report.reportingUserId }}
+        <span *ngIf="report.reportingUser">
+          ({{ report.reportingUser.username }})
+        </span>
+      </p>
+      <p *ngIf="report.reason">
+        <strong>Reason:</strong> {{ report.reason }}
+      </p>
+      <p *ngIf="report.timeStamp">
+        <strong>Date:</strong> {{ report.timeStamp | date: 'medium' }}
+      </p>
+    </div>
+    <div class="report-actions">
+      <button type="button" (click)="deleteReportedUser(report)">
+        Delete User
+      </button>
+    </div>
+  </div>
+</div>

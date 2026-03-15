@@ -1,0 +1,63 @@
+<div class="admin-groups-container">
+  <h2>Manage User Groups</h2>
+
+  <div class="create-group">
+    <h3>Create New Group</h3>
+    <input
+      type="text"
+      [(ngModel)]="newGroupName"
+      name="newGroupName"
+      placeholder="Group name"
+    />
+    <button (click)="createGroup()">Create Group</button>
+  </div>
+
+  <div class="assign-user">
+    <h3>Assign User to Group</h3>
+    <label>
+      Group:
+      <select [(ngModel)]="selectedGroupId" name="selectedGroupId">
+        <option [ngValue]="null">Select group</option>
+        <option *ngFor="let g of groups" [ngValue]="g.groupId">
+          {{ g.groupName }} ({{ g.groupMembers?.length || 0 }} members)
+        </option>
+      </select>
+    </label>
+
+    <label>
+      User:
+      <select [(ngModel)]="selectedUserId" name="selectedUserId">
+        <option [ngValue]="null">Select user</option>
+        <option *ngFor="let u of users" [ngValue]="u.userId">
+          {{ u.username }}
+        </option>
+      </select>
+    </label>
+
+    <button (click)="assignUser()">Assign</button>
+  </div>
+
+  <div *ngIf="loading">Loading groups...</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <div class="groups-list" *ngIf="!loading">
+    <h3>All Groups</h3>
+    <div *ngFor="let group of groups" class="group-card">
+      <div class="group-card-header">
+        <h4>{{ group.groupName }}</h4>
+        <button class="btn-danger" (click)="deleteGroup(group.groupId)">Delete Group</button>
+      </div>
+      <p *ngIf="!group.groupMembers || group.groupMembers.length === 0">
+        No members in this group.
+      </p>
+      <ul *ngIf="group.groupMembers && group.groupMembers.length > 0">
+        <li *ngFor="let member of group.groupMembers">
+          {{ member.username }}
+          <button (click)="messageUser(member.userId)">Message</button>
+          <button (click)="removeUserFromGroup(group.groupId, member.userId)">Remove</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+

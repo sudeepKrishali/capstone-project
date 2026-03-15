@@ -1,0 +1,15 @@
+<div class="admin-container">
+  <h2>Pending Post Approvals</h2>
+  <div *ngIf="pendingPosts.length === 0" class="no-posts">
+    No posts awaiting approval.
+  </div>
+
+  <div *ngFor="let post of pendingPosts" class="approval-card">
+    <div class="post-info">
+      <strong>User: {{ post.user?.username }}</strong>
+      <p>{{ post.content }}</p>
+      <img *ngIf="post.postImage" [src]="'https://localhost:7048' + post.postImage" class="preview-img">
+    </div>
+    <button (click)="approvePost(post.postId)" class="approve-btn">Approve Post</button>
+  </div>
+</div>

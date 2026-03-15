@@ -1,21 +1,42 @@
 import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { BrowserModule, withEventReplay } from '@angular/platform-browser';
 import { provideHttpClient, withInterceptorsFromDi, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './interceptors/auth-interceptor';
-import { ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router'; 
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
 import { LoginComponent } from './components/login/login';
 import { RegisterComponent } from './components/register/register';
 import { NewsfeedComponent } from './components/newsfeed/newsfeed';
+import { CreatePostComponent } from './components/create-post/create-post';
+import { NavbarComponent } from './components/navbar/navbar';
+import { withFetch } from '@angular/common/http';
+import { AdminApprovalComponent } from './components/admin-approval/admin-approval';
+import { AdminReportsComponent } from './components/admin-reports/admin-reports';
+import { SearchUsersComponent } from './components/search-users/search-users';
+import { MessagesComponent } from './components/messages/messages';
+import { AdminGroupsComponent } from './components/admin-groups/admin-groups';
+import { UserGroupComponent } from './components/user-group/user-group';
 
 @NgModule({
-  declarations: [App, LoginComponent, RegisterComponent, NewsfeedComponent],
-  imports: [BrowserModule, AppRoutingModule, ReactiveFormsModule,RouterModule],
+  declarations: [
+    App,
+    LoginComponent,
+    RegisterComponent,
+    NewsfeedComponent,
+    CreatePostComponent,
+    NavbarComponent,
+    AdminApprovalComponent,
+    AdminReportsComponent,
+    SearchUsersComponent,
+    MessagesComponent,
+    AdminGroupsComponent,
+    UserGroupComponent,
+  ],
+  imports: [BrowserModule, AppRoutingModule, ReactiveFormsModule, RouterModule, FormsModule],
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideClientHydration(withEventReplay()),
     provideHttpClient(withInterceptors([authInterceptor])),
   ],
   bootstrap: [App],

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProfileBook.API.Models
 {
@@ -10,6 +10,9 @@ namespace ProfileBook.API.Models
         public string? Password { get; set; }
         public string? Role { get; set; } // "Admin" or "User" 
         public string? ProfileImage { get; set; }
+
+        public int? GroupId { get; set; }
+        public Group? Group { get; set; }
 
         // Navigation properties
         public ICollection<Post>? Posts { get; set; }

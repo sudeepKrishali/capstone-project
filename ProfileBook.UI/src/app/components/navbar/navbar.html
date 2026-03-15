@@ -1,0 +1,38 @@
+<nav class="navbar">
+  <div class="logo">ProfileBook</div>
+  
+  <ul class="nav-links">
+    <li *ngIf="authService.isLoggedIn()">
+      <a routerLink="/createPost">Create Post</a>
+    </li>
+    <li *ngIf="authService.isLoggedIn()">
+      <a routerLink="/newsfeed">Newsfeed</a>
+    </li>
+    <li *ngIf="authService.isLoggedIn()">
+      <a routerLink="/search-users">Search Users</a>
+    </li>
+    <li *ngIf="authService.isLoggedIn()">
+      <a routerLink="/messages">Messages</a>
+    </li>
+
+    <li *ngIf="isUserAdmin()">
+      <a routerLink="/admin/pending-posts">Approve Posts</a>
+    </li>
+    <li *ngIf="isUserAdmin()">
+      <a routerLink="/admin/reports">View Reports</a>
+    </li>
+    <li *ngIf="isUserAdmin()">
+      <a routerLink="/admin/groups">ManageGroups</a>
+    </li>
+    <li *ngIf="authService.isLoggedIn()">
+      <a routerLink="/my-group">My Group</a>
+    </li>
+
+    <li *ngIf="!authService.isLoggedIn()">
+      <a routerLink="/login">Login</a>
+    </li>
+    <li *ngIf="authService.isLoggedIn()">
+      <button (click)="logout()" class="logout-btn">Logout</button>
+    </li>
+  </ul>
+</nav>

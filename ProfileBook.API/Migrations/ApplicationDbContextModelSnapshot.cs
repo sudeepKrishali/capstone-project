@@ -47,6 +47,8 @@ namespace ProfileBook.API.Migrations
 
                     b.HasIndex("PostId");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("Comments");
                 });
 
@@ -64,6 +66,35 @@ namespace ProfileBook.API.Migrations
                     b.HasKey("GroupId");
 
                     b.ToTable("Groups");
+                });
+
+            modelBuilder.Entity("ProfileBook.API.Models.GroupMessage", b =>
+                {
+                    b.Property<int>("GroupMessageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GroupMessageId"));
+
+                    b.Property<int>("GroupId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MessageContent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SenderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("TimeStamp")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("GroupMessageId");
+
+                    b.HasIndex("GroupId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("GroupMessages");
                 });
 
             modelBuilder.Entity("ProfileBook.API.Models.Like", b =>
@@ -211,6 +242,33 @@ namespace ProfileBook.API.Migrations
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("ProfileBook.API.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ProfileBook.API.Models.GroupMessage", b =>
+                {
+                    b.HasOne("ProfileBook.API.Models.Group", "Group")
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProfileBook.API.Models.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Group");
+
+                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("ProfileBook.API.Models.Like", b =>
@@ -273,9 +331,12 @@ namespace ProfileBook.API.Migrations
 
             modelBuilder.Entity("ProfileBook.API.Models.User", b =>
                 {
-                    b.HasOne("ProfileBook.API.Models.Group", null)
+                    b.HasOne("ProfileBook.API.Models.Group", "Group")
                         .WithMany("GroupMembers")
-                        .HasForeignKey("GroupId");
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Group");
                 });
 
             modelBuilder.Entity("ProfileBook.API.Models.Group", b =>

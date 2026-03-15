@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProfileBook.API.Data;
@@ -25,8 +25,52 @@ public class UserController(ApplicationDbContext context) : ControllerBase
     {
         var user = await context.Users.FindAsync(id);
         if (user == null) return NotFound();
+
+        // Remove related data that has restrictive foreign keys
+
+        // Messages where the user is sender or receiver
+        var relatedMessages = await context.Messages
+            .Where(m => m.SenderId == id || m.ReceiverId == id)
+            .ToListAsync();
+        if (relatedMessages.Count > 0)
+        {
+            context.Messages.RemoveRange(relatedMessages);
+        }
+
+        // Reports where the user is reporter or reported
+        var relatedReports = await context.Reports
+            .Where(r => r.ReportingUserId == id || r.ReportedUserId == id)
+            .ToListAsync();
+        if (relatedReports.Count > 0)
+        {
+            context.Reports.RemoveRange(relatedReports);
+        }
+
+        // Comments made by the user
+        var relatedComments = await context.Comments
+            .Where(c => c.UserId == id)
+            .ToListAsync();
+        if (relatedComments.Count > 0)
+        {
+            context.Comments.RemoveRange(relatedComments);
+        }
+
+        // Likes made by the user
+        var relatedLikes = await context.Likes
+            .Where(l => l.UserId == id)
+            .ToListAsync();
+        if (relatedLikes.Count > 0)
+        {
+            context.Likes.RemoveRange(relatedLikes);
+        }
+
+        // First save removal of related entities so FK constraints are satisfied
+        await context.SaveChangesAsync();
+
+        // Finally remove the user (posts and their comments/likes should cascade from the Post relationship)
         context.Users.Remove(user);
         await context.SaveChangesAsync();
+
         return NoContent();
     }
 
