@@ -45,7 +45,11 @@ export class SearchUsersComponent {
     this.loading = true;
     this.userService.searchUsers(term).subscribe({
       next: (data: User[]) => {
-        this.users = data;
+        const currentId = this.currentUserId;
+        this.users =
+          currentId != null
+            ? data.filter((u) => u.userId !== currentId)
+            : data;
         this.loading = false;
         this.hasSearched = true;
         this.cdr.detectChanges();
