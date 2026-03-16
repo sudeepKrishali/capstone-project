@@ -1,15 +1,19 @@
 import { TestBed } from '@angular/core/testing';
 import { RouterModule } from '@angular/router';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { App } from './app';
+import { NavbarComponent } from './components/navbar/navbar';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
-        RouterModule.forRoot([])
+        RouterModule.forRoot([]),
+        HttpClientTestingModule
       ],
       declarations: [
-        App
+        App,
+        NavbarComponent
       ],
     }).compileComponents();
   });
@@ -20,10 +24,10 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render title', async () => {
+  it('should render the navbar component', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, ProfileBook.UI');
+    expect(compiled.querySelector('app-navbar')).toBeTruthy();
   });
 });

@@ -1,17 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
-import { CreatePost } from './create-post';
+import { FormsModule } from '@angular/forms';
+import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { CreatePostComponent } from './create-post';
 
 describe('CreatePost', () => {
-  let component: CreatePost;
-  let fixture: ComponentFixture<CreatePost>;
+  let component: CreatePostComponent;
+  let fixture: ComponentFixture<CreatePostComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [CreatePost],
+      imports: [FormsModule, RouterTestingModule, HttpClientTestingModule],
+      declarations: [CreatePostComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(CreatePost);
+    fixture = TestBed.createComponent(CreatePostComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AdminApproval } from './admin-approval';
+import { AdminApprovalComponent } from './admin-approval';
 
 describe('AdminApproval', () => {
-  let component: AdminApproval;
-  let fixture: ComponentFixture<AdminApproval>;
+  let component: AdminApprovalComponent;
+  let fixture: ComponentFixture<AdminApprovalComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [AdminApproval],
+      declarations: [AdminApprovalComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(AdminApproval);
+    fixture = TestBed.createComponent(AdminApprovalComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
