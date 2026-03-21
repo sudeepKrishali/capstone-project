@@ -1,9 +1,11 @@
-import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from '../../services/message';
 import { UserService } from '../../services/user';
 import { AuthService } from '../../services/auth';
 import { Message, User } from '../../models';
+import { MessageRealtimeService } from '../../services/message-realtime';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-messages',
@@ -11,12 +13,13 @@ import { Message, User } from '../../models';
   templateUrl: './messages.html',
   styleUrl: './messages.css',
 })
-export class MessagesComponent implements OnInit {
+export class MessagesComponent implements OnInit, OnDestroy {
   otherUser: User | null = null;
   messages: Message[] = [];
   newMessage = '';
   loading = false;
   chatUserId: number | null = null;
+  private realtimeSub?: Subscription;
 
   @ViewChild('messagesList') messagesList?: ElementRef<HTMLDivElement>;
 
@@ -24,6 +27,7 @@ export class MessagesComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private messageService: MessageService,
+    private messageRealtimeService: MessageRealtimeService,
     private userService: UserService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef
@@ -44,6 +48,34 @@ export class MessagesComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const token = this.authService.getToken();
+    this.messageRealtimeService
+      .connect(token)
+      .then(async () => {
+        const currentId = this.currentUserId;
+        if (currentId != null) {
+          await this.messageRealtimeService.joinUserChannel(currentId);
+        }
+      })
+      .catch((err) => console.error('[MessagesComponent] SignalR connect failed', err));
+
+    this.realtimeSub = this.messageRealtimeService.incomingMessages$().subscribe((msg) => {
+      const currentId = this.currentUserId;
+      if (currentId == null || this.chatUserId == null) return;
+
+      const belongsToCurrentChat =
+        (msg.senderId === currentId && msg.receiverId === this.chatUserId) ||
+        (msg.senderId === this.chatUserId && msg.receiverId === currentId);
+
+      if (!belongsToCurrentChat) return;
+
+      if (this.messages.some((m) => m.messageId === msg.messageId)) return;
+
+      this.messages = [...this.messages, msg];
+      this.cdr.detectChanges();
+      this.scrollToBottom();
+    });
+
     this.route.paramMap.subscribe((params) => {
       const userIdParam = params.get('userId');
       if (userIdParam) {
@@ -58,6 +90,13 @@ export class MessagesComponent implements OnInit {
         this.messages = [];
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.realtimeSub?.unsubscribe();
+    this.messageRealtimeService
+      .disconnect()
+      .catch((err) => console.error('[MessagesComponent] SignalR disconnect failed', err));
   }
 
   loadChat(otherUserId: number): void {
@@ -104,7 +143,11 @@ export class MessagesComponent implements OnInit {
     console.log('[MessagesComponent] sendMessage', { from: currentId, to: this.otherUser.userId, text });
     this.messageService.sendMessage(currentId, this.otherUser.userId, text).subscribe({
       next: (msg) => {
-        this.messages = [...this.messages, msg];
+        // SignalR may deliver this message before HTTP response returns.
+        // Guard against adding the same message twice in sender chat.
+        if (!this.messages.some((m) => m.messageId === msg.messageId)) {
+          this.messages = [...this.messages, msg];
+        }
         this.newMessage = '';
         this.cdr.detectChanges();
         this.scrollToBottom();

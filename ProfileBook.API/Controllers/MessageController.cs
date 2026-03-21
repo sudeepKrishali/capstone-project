@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
 using ProfileBook.API.Data;
+using ProfileBook.API.Hubs;
 using ProfileBook.API.Models;
 
 [Route("api/[controller]")]
 [ApiController]
-public class MessageController(ApplicationDbContext context) : ControllerBase
+public class MessageController(ApplicationDbContext context, IHubContext<MessageHub> hubContext) : ControllerBase
 {
     
     [HttpGet("chat/{user1Id}/{user2Id}")]
@@ -55,6 +57,11 @@ public class MessageController(ApplicationDbContext context) : ControllerBase
             message.MessageContent,
             message.TimeStamp
         };
+
+        await hubContext.Clients.Group(MessageHub.GetUserGroup(message.SenderId.ToString()))
+            .SendAsync("ReceiveMessage", result);
+        await hubContext.Clients.Group(MessageHub.GetUserGroup(message.ReceiverId.ToString()))
+            .SendAsync("ReceiveMessage", result);
 
         Console.WriteLine($"[MessageController] SendMessage END id={message.MessageId}, time={DateTime.UtcNow:O}");
 

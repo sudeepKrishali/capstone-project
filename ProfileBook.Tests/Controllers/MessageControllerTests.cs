@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using ProfileBook.API.Controllers;
 using ProfileBook.API.Data;
+using ProfileBook.API.Hubs;
 using ProfileBook.API.Models;
 using ProfileBook.Tests.Helpers;
 using System;
@@ -14,12 +17,32 @@ namespace ProfileBook.Tests.Controllers
 {
     public class MessageControllerTests
     {
+        private static IHubContext<MessageHub> CreateHubContextMock()
+        {
+            var clientProxyMock = new Mock<IClientProxy>();
+            clientProxyMock
+                .Setup(x => x.SendCoreAsync(It.IsAny<string>(), It.IsAny<object?[]>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            var hubClientsMock = new Mock<IHubClients>();
+            hubClientsMock
+                .Setup(x => x.Group(It.IsAny<string>()))
+                .Returns(clientProxyMock.Object);
+
+            var hubContextMock = new Mock<IHubContext<MessageHub>>();
+            hubContextMock
+                .Setup(x => x.Clients)
+                .Returns(hubClientsMock.Object);
+
+            return hubContextMock.Object;
+        }
+
         [Fact]
         public async Task SendMessage_ShouldSaveMessage_AndReturnOk()
         {
             // Arrange
             var context = TestDataHelper.GetInMemoryDbContext();
-            var controller = new MessageController(context);
+            var controller = new MessageController(context, CreateHubContextMock());
 
             var message = new Message
             {
@@ -56,7 +79,7 @@ namespace ProfileBook.Tests.Controllers
             );
             await context.SaveChangesAsync();
 
-            var controller = new MessageController(context);
+            var controller = new MessageController(context, CreateHubContextMock());
 
             // Act
             var result = await controller.GetChat(1, 2);

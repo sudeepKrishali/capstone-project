@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ProfileBook.API.Data;
+using ProfileBook.API.Hubs;
 using ProfileBook.API.Services;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -36,6 +37,7 @@ builder.Services.AddAuthorization();
 // 3. JSON & Controllers
 builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+builder.Services.AddSignalR();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -58,7 +60,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddCors(options => options.AddPolicy("AllowAngular",
-    p => p.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader()));
+    p => p.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader().AllowCredentials()));
 
 
 // Change this line in Program.cs
@@ -78,5 +80,6 @@ app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<MessageHub>("/hubs/messages");
 app.UseStaticFiles(); // Required to serve uploaded images from wwwroot
 app.Run();
