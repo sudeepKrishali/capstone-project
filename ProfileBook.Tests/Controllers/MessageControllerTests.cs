@@ -63,6 +63,7 @@ namespace ProfileBook.Tests.Controllers
             Assert.Equal("Hello there!", savedMessage.MessageContent);
             Assert.Equal(1, savedMessage.SenderId);
             Assert.Equal(2, savedMessage.ReceiverId);
+            Assert.False(savedMessage.IsRead);
             Assert.True(savedMessage.TimeStamp <= DateTime.UtcNow);
         }
 
@@ -89,6 +90,53 @@ namespace ProfileBook.Tests.Controllers
             var returnedMessages = Assert.IsAssignableFrom<IEnumerable<object>>(okResult.Value);
 
             Assert.Equal(2, returnedMessages.Count());
+        }
+
+        [Fact]
+        public async Task GetConversations_ShouldReturnSummaries_OrderedByLastMessage()
+        {
+            var context = TestDataHelper.GetInMemoryDbContext();
+            var t1 = DateTime.UtcNow.AddHours(-2);
+            var t2 = DateTime.UtcNow.AddHours(-1);
+            context.Users.AddRange(
+                new User { UserId = 1, Username = "alice" },
+                new User { UserId = 2, Username = "bob" },
+                new User { UserId = 3, Username = "carol" });
+            context.Messages.AddRange(
+                new Message { SenderId = 1, ReceiverId = 2, MessageContent = "old", TimeStamp = t1, IsRead = true },
+                new Message { SenderId = 2, ReceiverId = 1, MessageContent = "newer", TimeStamp = t2, IsRead = false });
+            await context.SaveChangesAsync();
+
+            var controller = new MessageController(context, CreateHubContextMock());
+            var result = await controller.GetConversations(1);
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var list = Assert.IsAssignableFrom<IEnumerable<object>>(ok.Value)!.ToList();
+            Assert.Single(list);
+        }
+
+        [Fact]
+        public async Task MarkConversationRead_ShouldClearUnread_ForReceiver()
+        {
+            var context = TestDataHelper.GetInMemoryDbContext();
+            context.Users.AddRange(
+                new User { UserId = 1, Username = "alice" },
+                new User { UserId = 2, Username = "bob" });
+            context.Messages.Add(new Message
+            {
+                SenderId = 2,
+                ReceiverId = 1,
+                MessageContent = "hi",
+                TimeStamp = DateTime.UtcNow,
+                IsRead = false
+            });
+            await context.SaveChangesAsync();
+
+            var controller = new MessageController(context, CreateHubContextMock());
+            var markResult = await controller.MarkConversationRead(1, 2);
+            Assert.IsType<NoContentResult>(markResult);
+
+            var msg = await context.Messages.FirstAsync();
+            Assert.True(msg.IsRead);
         }
     }
 }

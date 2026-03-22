@@ -3,9 +3,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from '../../services/message';
 import { UserService } from '../../services/user';
 import { AuthService } from '../../services/auth';
-import { Message, User } from '../../models';
+import { ConversationSummary, Message, User } from '../../models';
 import { MessageRealtimeService } from '../../services/message-realtime';
 import { Subscription } from 'rxjs';
+import { environment } from '../../../environment';
 
 @Component({
   selector: 'app-messages',
@@ -14,11 +15,17 @@ import { Subscription } from 'rxjs';
   styleUrl: './messages.css',
 })
 export class MessagesComponent implements OnInit, OnDestroy {
+  conversations: ConversationSummary[] = [];
+  conversationsLoading = false;
+
   otherUser: User | null = null;
   messages: Message[] = [];
   newMessage = '';
-  loading = false;
+  loadingChat = false;
   chatUserId: number | null = null;
+
+  imageBaseUrl = environment.apiUrl.replace('/api', '');
+
   private realtimeSub?: Subscription;
 
   @ViewChild('messagesList') messagesList?: ElementRef<HTMLDivElement>;
@@ -61,35 +68,96 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
     this.realtimeSub = this.messageRealtimeService.incomingMessages$().subscribe((msg) => {
       const currentId = this.currentUserId;
-      if (currentId == null || this.chatUserId == null) return;
+      if (currentId == null) return;
+
+      this.applyIncomingToConversations(msg, currentId);
+
+      if (this.chatUserId == null) {
+        this.cdr.detectChanges();
+        return;
+      }
 
       const belongsToCurrentChat =
         (msg.senderId === currentId && msg.receiverId === this.chatUserId) ||
         (msg.senderId === this.chatUserId && msg.receiverId === currentId);
 
-      if (!belongsToCurrentChat) return;
+      if (!belongsToCurrentChat) {
+        this.cdr.detectChanges();
+        return;
+      }
 
-      if (this.messages.some((m) => m.messageId === msg.messageId)) return;
+      if (this.messages.some((m) => m.messageId === msg.messageId)) {
+        this.cdr.detectChanges();
+        return;
+      }
 
       this.messages = [...this.messages, msg];
+
       this.cdr.detectChanges();
       this.scrollToBottom();
     });
 
     this.route.paramMap.subscribe((params) => {
       const userIdParam = params.get('userId');
+      if (this.currentUserId != null) {
+        this.loadConversations();
+      }
       if (userIdParam) {
         const userId = +userIdParam;
-        console.log('[MessagesComponent] Route userId param =', userId);
         this.chatUserId = userId;
         this.loadChat(userId);
       } else {
-        console.log('[MessagesComponent] No userId param in route');
         this.chatUserId = null;
         this.otherUser = null;
         this.messages = [];
+        this.loadingChat = false;
+        this.cdr.detectChanges();
       }
     });
+  }
+
+  private syncUnreadForPeer(otherUserId: number): void {
+    const idx = this.conversations.findIndex((c) => c.otherUserId === otherUserId);
+    if (idx < 0) return;
+    const next = [...this.conversations];
+    next[idx] = { ...next[idx], unreadCount: 0 };
+    this.conversations = next;
+  }
+
+  private applyIncomingToConversations(msg: Message, currentId: number): void {
+    const otherId = msg.senderId === currentId ? msg.receiverId : msg.senderId;
+    const idx = this.conversations.findIndex((c) => c.otherUserId === otherId);
+    const time =
+      typeof msg.timeStamp === 'string'
+        ? msg.timeStamp
+        : new Date(msg.timeStamp as unknown as string).toISOString();
+    const iAmReceiver = msg.receiverId === currentId;
+    const viewingThisChat = this.chatUserId === otherId;
+
+    if (idx >= 0) {
+      const c = { ...this.conversations[idx] };
+      c.lastMessagePreview = msg.messageContent;
+      c.lastMessageTime = time;
+      if (iAmReceiver) {
+        if (viewingThisChat) {
+          c.unreadCount = 0;
+        } else {
+          c.unreadCount = (c.unreadCount ?? 0) + 1;
+        }
+      }
+      let next = [...this.conversations];
+      next[idx] = c;
+      next = next.sort(
+        (a, b) => new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
+      );
+      this.conversations = next;
+
+      if (iAmReceiver && viewingThisChat) {
+        this.messageService.markConversationRead(currentId, otherId).subscribe({ error: () => {} });
+      }
+    } else {
+      this.loadConversations();
+    }
   }
 
   ngOnDestroy(): void {
@@ -99,38 +167,59 @@ export class MessagesComponent implements OnInit, OnDestroy {
       .catch((err) => console.error('[MessagesComponent] SignalR disconnect failed', err));
   }
 
+  loadConversations(): void {
+    const currentId = this.currentUserId;
+    if (currentId == null) return;
+    this.conversationsLoading = true;
+    this.messageService.getConversations(currentId).subscribe({
+      next: (list) => {
+        this.conversations = list;
+        this.conversationsLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.conversations = [];
+        this.conversationsLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
   loadChat(otherUserId: number): void {
     const currentId = this.currentUserId;
-    console.log('[MessagesComponent] loadChat called with otherUserId =', otherUserId, 'currentUserId =', currentId);
     if (currentId == null) return;
-    this.loading = true;
+    this.loadingChat = true;
 
     this.userService.getUser(otherUserId).subscribe({
       next: (user) => {
-        console.log('[MessagesComponent] Loaded other user', user);
         this.otherUser = user;
         this.messageService.getChat(currentId, otherUserId).subscribe({
           next: (msgs) => {
-            console.log('[MessagesComponent] Loaded messages, count =', msgs.length);
-            console.log('[MessagesComponent] messages: ', msgs);
             this.messages = msgs;
-            this.loading = false;
+            this.loadingChat = false;
+            this.messageService.markConversationRead(currentId, otherUserId).subscribe({
+              next: () => {
+                this.syncUnreadForPeer(otherUserId);
+                this.cdr.detectChanges();
+              },
+              error: () => {
+                this.cdr.detectChanges();
+              },
+            });
             this.cdr.detectChanges();
             this.scrollToBottom();
           },
-          error: (err) => {
-            console.error('[MessagesComponent] Error loading messages', err);
+          error: () => {
             this.messages = [];
-            this.loading = false;
+            this.loadingChat = false;
             this.cdr.detectChanges();
           },
         });
       },
-      error: (err) => {
-        console.error('[MessagesComponent] Error loading user for chat', err);
+      error: () => {
         this.otherUser = null;
         this.messages = [];
-        this.loading = false;
+        this.loadingChat = false;
         this.cdr.detectChanges();
       },
     });
@@ -140,26 +229,49 @@ export class MessagesComponent implements OnInit, OnDestroy {
     const text = this.newMessage.trim();
     const currentId = this.currentUserId;
     if (!text || !this.otherUser || currentId == null) return;
-    console.log('[MessagesComponent] sendMessage', { from: currentId, to: this.otherUser.userId, text });
     this.messageService.sendMessage(currentId, this.otherUser.userId, text).subscribe({
       next: (msg) => {
-        // SignalR may deliver this message before HTTP response returns.
-        // Guard against adding the same message twice in sender chat.
         if (!this.messages.some((m) => m.messageId === msg.messageId)) {
           this.messages = [...this.messages, msg];
         }
         this.newMessage = '';
+        this.applyOutgoingToConversationPreview(msg, currentId);
         this.cdr.detectChanges();
         this.scrollToBottom();
       },
-      error: (err) => {
-        console.error(err);
+      error: () => {
         alert('Failed to send message.');
       },
     });
   }
 
+  private applyOutgoingToConversationPreview(msg: Message, currentId: number): void {
+    const otherId = msg.receiverId;
+    const idx = this.conversations.findIndex((c) => c.otherUserId === otherId);
+    const time =
+      typeof msg.timeStamp === 'string'
+        ? msg.timeStamp
+        : new Date(msg.timeStamp as unknown as string).toISOString();
+    if (idx >= 0) {
+      const c = { ...this.conversations[idx] };
+      c.lastMessagePreview = msg.messageContent;
+      c.lastMessageTime = time;
+      let next = [...this.conversations];
+      next[idx] = c;
+      next = next.sort(
+        (a, b) => new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
+      );
+      this.conversations = next;
+    } else {
+      this.loadConversations();
+    }
+  }
+
   goToSearch(): void {
     this.router.navigate(['/search-users']);
+  }
+
+  backToInbox(): void {
+    this.router.navigate(['/messages']);
   }
 }

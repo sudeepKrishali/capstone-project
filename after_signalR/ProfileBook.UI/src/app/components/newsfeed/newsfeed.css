@@ -1,0 +1,31 @@
+.newsfeed-container {
+  max-width: 640px;
+}
+
+.post-card {
+  border-radius: 0.75rem;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.post-image {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  display: block;
+  background-color: #f3f4f6;
+}
+
+.comments-section {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 0.5rem;
+}
+
+.comment-input .form-control {
+  font-size: 0.9rem;
+}

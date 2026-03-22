@@ -1,0 +1,29 @@
+.admin-groups-container {
+  max-width: 900px;
+  margin: 2rem auto;
+}
+
+.groups-list {
+  margin-top: 0.5rem;
+}
+
+.group-card {
+  border-radius: 0.5rem;
+}
+
+.group-card-header {
+  background-color: #f8fafc;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+}
+
+.btn-danger:hover {
+  background-color: #bb2d3b;
+}
+
+.error {
+  color: #c0392b;
+}
+

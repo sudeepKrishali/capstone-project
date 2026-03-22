@@ -1,4 +1,4 @@
-﻿namespace ProfileBook.API.Models
+namespace ProfileBook.API.Models
 {
     public class Message
     {
@@ -6,7 +6,9 @@
         public int SenderId { get; set; } // Foreign Key 
         public int ReceiverId { get; set; } // Foreign Key
         public string? MessageContent { get; set; }
-        public DateTime TimeStamp { get; set; } = DateTime.Now; 
+        public DateTime TimeStamp { get; set; } = DateTime.Now;
+        /// <summary>True after the receiver has opened the conversation (server marks incoming messages as unread until then).</summary>
+        public bool IsRead { get; set; }
 
         // Navigation properties
         public User? Sender { get; set; }

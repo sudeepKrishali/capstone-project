@@ -1,39 +1,92 @@
-<div class="messages-container">
-  <ng-container *ngIf="chatUserId; else inbox">
-    <div class="chat-header d-flex align-items-center gap-2 mb-2">
-      <a routerLink="/messages" class="back-link">&larr; Back</a>
-      <h2 class="h5 mb-0">Chat with {{ otherUser?.username || 'User' }}</h2>
+<div
+  class="messages-shell"
+  [class.has-open-chat]="chatUserId"
+>
+  <aside class="chat-sidebar" *ngIf="currentUserId != null">
+    <div class="sidebar-header">
+      <h2 class="h5 mb-0">Messages</h2>
+      <button type="button" class="btn btn-link btn-sm p-0 sidebar-search" (click)="goToSearch()">
+        New chat
+      </button>
     </div>
-    <div *ngIf="loading" class="loading small text-muted">Loading...</div>
-    <div class="chat-area">
-      <div class="messages-list" #messagesList>
-        <div
-          *ngFor="let msg of messages"
-          [class.sent]="msg.senderId === currentUserId"
-          [class.received]="msg.senderId !== currentUserId"
-          class="message-bubble"
+
+    <div *ngIf="conversationsLoading" class="sidebar-loading text-muted small p-3">Loading chats…</div>
+
+    <ul class="conversation-list list-unstyled mb-0" *ngIf="!conversationsLoading">
+      <li *ngIf="conversations.length === 0" class="p-3 text-muted small">
+        No conversations yet. Use <strong>New chat</strong> to find users.
+      </li>
+      <li *ngFor="let c of conversations">
+        <a
+          class="conversation-item"
+          [routerLink]="['/messages', 'chat', c.otherUserId]"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
         >
-          <span class="msg-text">{{ msg.messageContent }}</span>
-          <span class="msg-time">{{ msg.timeStamp | date: 'short' }}</span>
+          <span class="avatar-wrap">
+            <img
+              *ngIf="c.otherProfileImage"
+              [src]="imageBaseUrl + c.otherProfileImage"
+              alt=""
+              onerror="this.style.display='none'"
+            />
+            <span *ngIf="!c.otherProfileImage" class="avatar-placeholder">
+              {{ (c.otherUsername || '?').charAt(0) }}
+            </span>
+          </span>
+          <span class="conversation-body">
+            <span class="conversation-top">
+              <span class="conversation-name">{{ c.otherUsername || 'User' }}</span>
+              <span class="conversation-time">{{ c.lastMessageTime | date: 'short' }}</span>
+            </span>
+            <span class="conversation-preview">{{ c.lastMessagePreview || '' }}</span>
+          </span>
+          <span class="unread-badge" *ngIf="c.unreadCount > 0">{{ c.unreadCount > 99 ? '99+' : c.unreadCount }}</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <section class="chat-main">
+    <ng-container *ngIf="chatUserId; else inboxPlaceholder">
+      <div class="chat-header d-flex align-items-center gap-2 mb-2">
+        <button type="button" class="btn btn-link back-link d-md-none p-0 me-1" (click)="backToInbox()">
+          &larr; Chats
+        </button>
+        <h2 class="h5 mb-0">Chat with {{ otherUser?.username || 'User' }}</h2>
+      </div>
+      <div *ngIf="loadingChat" class="loading small text-muted">Loading…</div>
+      <div class="chat-area" *ngIf="!loadingChat">
+        <div class="messages-list" #messagesList>
+          <div
+            *ngFor="let msg of messages"
+            [class.sent]="msg.senderId === currentUserId"
+            [class.received]="msg.senderId !== currentUserId"
+            class="message-bubble"
+          >
+            <span class="msg-text">{{ msg.messageContent }}</span>
+            <span class="msg-time">{{ msg.timeStamp | date: 'short' }}</span>
+          </div>
+        </div>
+        <div class="send-area">
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newMessage"
+            placeholder="Type a message…"
+            (keyup.enter)="sendMessage()"
+          />
+          <button type="button" class="btn btn-primary" (click)="sendMessage()">Send</button>
         </div>
       </div>
-      <div class="send-area">
-        <input
-          type="text"
-          class="form-control"
-          [(ngModel)]="newMessage"
-          placeholder="Type a message..."
-          (keyup.enter)="sendMessage()"
-        />
-        <button class="btn btn-primary" (click)="sendMessage()">Send</button>
+    </ng-container>
+
+    <ng-template #inboxPlaceholder>
+      <div class="inbox-placeholder-main">
+        <h2 class="h4">Your conversations</h2>
+        <p class="text-muted">Pick a chat on the left, or start one from Search Users.</p>
+        <button type="button" class="btn btn-primary" (click)="goToSearch()">Search users</button>
       </div>
-    </div>
-  </ng-container>
-  <ng-template #inbox>
-    <div class="inbox-placeholder">
-      <h2 class="h4">Messages</h2>
-      <p>Search for users to start a conversation.</p>
-      <button class="btn btn-primary" (click)="goToSearch()">Search Users</button>
-    </div>
-  </ng-template>
+    </ng-template>
+  </section>
 </div>

@@ -45,8 +45,18 @@ export interface Message {
   receiverId: number;
   messageContent?: string;
   timeStamp: Date;
+  isRead?: boolean;
   sender?: User;
   receiver?: User;
+}
+
+export interface ConversationSummary {
+  otherUserId: number;
+  otherUsername?: string;
+  otherProfileImage?: string;
+  lastMessagePreview?: string;
+  lastMessageTime: string;
+  unreadCount: number;
 }
 
 export interface Group {

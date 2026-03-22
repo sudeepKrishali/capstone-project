@@ -1,0 +1,99 @@
+<div class="user-group-container">
+  <div class="card shadow-sm mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h2 class="h5 mb-0">My Group</h2>
+    </div>
+    <div class="card-body">
+      <div *ngIf="loading" class="text-muted small mb-2">
+        Loading your group...
+      </div>
+      <div *ngIf="error" class="alert alert-danger py-2">
+        {{ error }}
+      </div>
+
+      <div *ngIf="!loading && !group" class="text-muted">
+        You are not assigned to any group.
+      </div>
+
+      <div *ngIf="!loading && group" class="group-card border-0 p-0">
+        <h3 class="h6 mb-2">{{ group.groupName }}</h3>
+        <p
+          *ngIf="!group.groupMembers || group.groupMembers.length === 0"
+          class="text-muted small mb-0"
+        >
+          No members in this group yet.
+        </p>
+        <ul
+          *ngIf="group.groupMembers && group.groupMembers.length > 0"
+          class="list-unstyled mb-0"
+        >
+          <li
+            *ngFor="let member of group.groupMembers"
+            class="d-flex justify-content-between align-items-center py-1 border-bottom small"
+          >
+            <span>{{ member.username }}</span>
+            <button
+              class="btn btn-sm btn-outline-primary"
+              (click)="messageMember(member.userId)"
+            >
+              Message
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="group" class="group-messages card">
+    <div class="card-header">
+      <h3 class="h6 mb-0">Group Messages</h3>
+    </div>
+    <div class="card-body">
+      <div class="group-messages-list" #groupMessagesList>
+        <div *ngIf="groupMessages.length === 0" class="text-muted small mb-2">
+          No messages yet.
+        </div>
+        <ul *ngIf="groupMessages.length > 0" class="list-unstyled mb-3">
+        <li
+          *ngFor="let msg of groupMessages"
+          class="group-message-item mb-2 small"
+          [ngClass]="{
+            'from-current': msg.senderId === currentUserId,
+            'from-other': msg.senderId !== currentUserId
+          }"
+        >
+          <div class="d-flex justify-content-between align-items-baseline">
+            <strong class="me-2">
+              {{
+                msg.senderId === currentUserId
+                  ? 'You'
+                  : (msg.senderName || 'User')
+              }}
+            </strong>
+            <span class="msg-time text-muted">
+              {{ msg.timeStamp | date: 'short' }}
+            </span>
+          </div>
+          <div class="msg-text mt-1">
+            {{ msg.messageContent }}
+          </div>
+        </li>
+      </ul>
+      </div>
+      <div class="group-message-input input-group">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="newGroupMessage"
+          name="newGroupMessage"
+          placeholder="Write a group message..."
+          (keyup.enter)="sendGroupMessage()"
+        />
+        <button class="btn btn-primary" (click)="sendGroupMessage()">
+          Send
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
