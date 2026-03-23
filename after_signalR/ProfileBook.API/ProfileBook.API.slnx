@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="../ProfileBook.Tests/ProfileBook.Tests.csproj" Id="0b0daf04-346b-458f-8559-519a00c2b24a" />
-  <Project Path="ProfileBook.API.csproj" />
-</Solution>
