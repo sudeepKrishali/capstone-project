@@ -3,6 +3,7 @@ import { RouterModule } from '@angular/router';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { App } from './app';
 import { NavbarComponent } from './components/navbar/navbar';
+import { FlashMessagesComponent } from './components/flash-messages/flash-messages';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -13,7 +14,8 @@ describe('App', () => {
       ],
       declarations: [
         App,
-        NavbarComponent
+        NavbarComponent,
+        FlashMessagesComponent
       ],
     }).compileComponents();
   });

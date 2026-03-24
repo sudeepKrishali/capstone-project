@@ -19,6 +19,8 @@ export class AdminGroupsComponent implements OnInit {
   selectedGroupId: number | null = null;
   selectedUserId: number | null = null;
   loading = false;
+  showDeleteGroupModal = false;
+  groupToDeleteId: number | null = null;
 
   constructor(
     private groupService: GroupService,
@@ -166,14 +168,28 @@ export class AdminGroupsComponent implements OnInit {
     });
   }
 
-  deleteGroup(groupId: number): void {
-    if (!confirm('Are you sure you want to delete this group?')) {
+  promptDeleteGroup(groupId: number): void {
+    this.groupToDeleteId = groupId;
+    this.showDeleteGroupModal = true;
+  }
+
+  cancelDeleteGroup(): void {
+    this.groupToDeleteId = null;
+    this.showDeleteGroupModal = false;
+  }
+
+  confirmDeleteGroup(): void {
+    if (this.groupToDeleteId == null) {
       return;
     }
+
+    const groupId = this.groupToDeleteId;
+
     this.groupService.deleteGroup(groupId).subscribe({
       next: () => {
         this.loadGroups();
         this.flash.success('Group deleted.');
+        this.cancelDeleteGroup();
         this.cdr.detectChanges();
       },
       error: () => {

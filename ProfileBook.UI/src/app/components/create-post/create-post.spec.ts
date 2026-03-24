@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { CreatePostComponent } from './create-post';
@@ -10,7 +10,7 @@ describe('CreatePost', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FormsModule, RouterTestingModule, HttpClientTestingModule],
+      imports: [ReactiveFormsModule, RouterTestingModule, HttpClientTestingModule],
       declarations: [CreatePostComponent],
     }).compileComponents();
 

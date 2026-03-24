@@ -20,6 +20,8 @@ export class NewsfeedComponent implements OnInit {
   editingPostId: number | null = null;
   editContent = '';
   editImageFile: File | null = null;
+  showDeletePostModal = false;
+  postToDeleteId: number | null = null;
 
   constructor(
     private postService: PostService,
@@ -136,13 +138,28 @@ export class NewsfeedComponent implements OnInit {
     });
   }
 
-  deletePost(postId: number): void {
-    if (!confirm('Delete this post? This cannot be undone.')) return;
+  promptDeletePost(postId: number): void {
+    this.postToDeleteId = postId;
+    this.showDeletePostModal = true;
+  }
+
+  cancelDeletePost(): void {
+    this.postToDeleteId = null;
+    this.showDeletePostModal = false;
+  }
+
+  confirmDeletePost(): void {
+    if (this.postToDeleteId == null) {
+      return;
+    }
+
+    const postId = this.postToDeleteId;
 
     this.postService.deletePost(postId).subscribe({
       next: () => {
         this.posts = this.posts.filter((p) => p.postId !== postId);
         if (this.editingPostId === postId) this.cancelEdit();
+        this.cancelDeletePost();
         this.cdr.detectChanges();
         this.flash.success('Post deleted.');
       },

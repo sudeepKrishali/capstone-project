@@ -11,6 +11,8 @@ import { Report } from '../../models';
 })
 export class AdminReportsComponent implements OnInit {
   reports: Report[] = [];
+  showDeleteUserModal = false;
+  reportToDeleteUser: Report | null = null;
 
   constructor(
     private reportService: ReportService,
@@ -35,23 +37,32 @@ export class AdminReportsComponent implements OnInit {
     });
   }
 
-  deleteReportedUser(report: Report): void {
+  promptDeleteReportedUser(report: Report): void {
     if (!report.reportedUserId) {
       return;
     }
+    this.reportToDeleteUser = report;
+    this.showDeleteUserModal = true;
+  }
 
-    const confirmed = confirm(
-      `Are you sure you want to delete user with ID ${report.reportedUserId}?`
-    );
-    if (!confirmed) {
+  cancelDeleteReportedUser(): void {
+    this.reportToDeleteUser = null;
+    this.showDeleteUserModal = false;
+  }
+
+  confirmDeleteReportedUser(): void {
+    if (!this.reportToDeleteUser?.reportedUserId) {
       return;
     }
 
-    this.userService.deleteUser(report.reportedUserId).subscribe({
+    const reportedUserId = this.reportToDeleteUser.reportedUserId;
+
+    this.userService.deleteUser(reportedUserId).subscribe({
       next: () => {
         this.reports = this.reports.filter(
-          (r) => r.reportedUserId !== report.reportedUserId
+          (r) => r.reportedUserId !== reportedUserId
         );
+        this.cancelDeleteReportedUser();
         this.cdr.detectChanges();
       },
       error: (err) => {

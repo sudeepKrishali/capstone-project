@@ -31,7 +31,7 @@
         <button
           type="button"
           class="btn btn-sm btn-outline-danger"
-          (click)="deletePost(post.postId)"
+          (click)="promptDeletePost(post.postId)"
         >
           Delete
         </button>
@@ -90,7 +90,7 @@
           }"
           (click)="onLike(post.postId)"
         >
-          Like ({{ post.likes?.length || 0 }})
+          Like ({{ post.likes.length || 0 }})
         </button>
       </div>
 
@@ -131,3 +131,28 @@
     </ng-template>
   </div>
 </div>
+
+<div
+  *ngIf="showDeletePostModal"
+  class="modal fade show d-block"
+  tabindex="-1"
+  role="dialog"
+  aria-modal="true"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Post</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="cancelDeletePost()"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">Delete this post? This cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cancelDeletePost()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="confirmDeletePost()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="showDeletePostModal" class="modal-backdrop fade show"></div>

@@ -37,7 +37,7 @@
           <button
             type="button"
             class="btn btn-sm btn-outline-danger"
-            (click)="deleteReportedUser(report)"
+            (click)="promptDeleteReportedUser(report)"
           >
             Delete User
           </button>
@@ -46,3 +46,31 @@
     </div>
   </div>
 </div>
+
+<div
+  *ngIf="showDeleteUserModal"
+  class="modal fade show d-block"
+  tabindex="-1"
+  role="dialog"
+  aria-modal="true"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Reported User</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="cancelDeleteReportedUser()"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">
+          Are you sure you want to delete user with ID
+          <strong>{{ reportToDeleteUser?.reportedUserId }}</strong>?
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cancelDeleteReportedUser()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="confirmDeleteReportedUser()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="showDeleteUserModal" class="modal-backdrop fade show"></div>
