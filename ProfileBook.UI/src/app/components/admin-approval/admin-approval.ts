@@ -1,6 +1,7 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
 import { PostService } from '../../services/post';
 import { OnInit } from '@angular/core';
+import { FlashMessageService } from '../../services/flash-message';
 
 @Component({
   selector: 'app-admin-approval',
@@ -13,7 +14,8 @@ export class AdminApprovalComponent implements OnInit {
 
   constructor(
     private postService: PostService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private flash: FlashMessageService
   ) {}
 
   ngOnInit(): void {
@@ -26,17 +28,23 @@ export class AdminApprovalComponent implements OnInit {
         this.pendingPosts = posts;
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Error fetching pending posts', err)
+      error: (err) => {
+        console.error('Error fetching pending posts', err);
+        this.flash.error('Failed to load pending posts.');
+      },
     });
   }
 
   approvePost(postId: number) {
     this.postService.approvePost(postId).subscribe({
       next: () => {
-        alert('Post approved successfully!');
+        this.flash.success('Post approved successfully!');
         this.loadPendingPosts(); 
       },
-      error: (err) => console.error('Approval failed', err)
+      error: (err) => {
+        console.error('Approval failed', err);
+        this.flash.error('Failed to approve post.');
+      },
     });
   }
 }

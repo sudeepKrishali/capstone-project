@@ -29,3 +29,7 @@
 .comment-input .form-control {
   font-size: 0.9rem;
 }
+
+.post-owner-actions {
+  flex-shrink: 0;
+}

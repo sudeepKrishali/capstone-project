@@ -3,6 +3,7 @@ import { PostService } from '../../services/post';
 import { AuthService } from '../../services/auth';
 import { Post, Comment, Like } from '../../models';
 import { environment } from '../../../environment';
+import { FlashMessageService } from '../../services/flash-message';
 
 @Component({
   selector: 'app-newsfeed',
@@ -16,11 +17,15 @@ export class NewsfeedComponent implements OnInit {
   loading = false;
   imageBaseUrl = environment.apiUrl.replace('/api', '');
   currentUserId: number | null = null;
+  editingPostId: number | null = null;
+  editContent = '';
+  editImageFile: File | null = null;
 
   constructor(
     private postService: PostService,
     private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private flash: FlashMessageService
   ) {}
   ngOnInit(): void {
     this.currentUserId = this.authService.getUserId();
@@ -36,6 +41,7 @@ export class NewsfeedComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading posts', err);
+        this.flash.error('Failed to load posts. Please try again.');
         this.posts = [];
         this.loading = false;
         this.cdr.detectChanges();
@@ -46,7 +52,7 @@ export class NewsfeedComponent implements OnInit {
 
   onLike(postId: number) {
     if (!this.currentUserId) {
-      alert('Please log in to like posts.');
+      this.flash.warning('Please log in to like posts.');
       return;
     }
 
@@ -76,6 +82,7 @@ export class NewsfeedComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error liking post', err);
+        this.flash.error('Could not update like. Please try again.');
         // Optionally: reload posts to revert optimistic change
         this.loadPosts();
       }
@@ -85,6 +92,65 @@ export class NewsfeedComponent implements OnInit {
   isPostLikedByCurrentUser(post: Post): boolean {
     if (!this.currentUserId || !post.likes) return false;
     return post.likes.some(like => like.userId === this.currentUserId);
+  }
+
+  isOwnPost(post: Post): boolean {
+    return this.currentUserId != null && post.userId === this.currentUserId;
+  }
+
+  startEdit(post: Post): void {
+    this.editingPostId = post.postId;
+    this.editContent = post.content ?? '';
+    this.editImageFile = null;
+  }
+
+  cancelEdit(): void {
+    this.editingPostId = null;
+    this.editContent = '';
+    this.editImageFile = null;
+  }
+
+  onEditImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    this.editImageFile = file ?? null;
+  }
+
+  saveEdit(postId: number): void {
+    const fd = new FormData();
+    fd.append('Content', this.editContent);
+    if (this.editImageFile) {
+      fd.append('Image', this.editImageFile, this.editImageFile.name);
+    }
+
+    this.postService.updatePost(postId, fd).subscribe({
+      next: () => {
+        this.cancelEdit();
+        this.loadPosts();
+        this.flash.success('Post updated.');
+      },
+      error: (err) => {
+        console.error('Update post failed', err);
+        this.flash.error('Could not update post. You can only edit your own posts.');
+      },
+    });
+  }
+
+  deletePost(postId: number): void {
+    if (!confirm('Delete this post? This cannot be undone.')) return;
+
+    this.postService.deletePost(postId).subscribe({
+      next: () => {
+        this.posts = this.posts.filter((p) => p.postId !== postId);
+        if (this.editingPostId === postId) this.cancelEdit();
+        this.cdr.detectChanges();
+        this.flash.success('Post deleted.');
+      },
+      error: (err) => {
+        console.error('Delete post failed', err);
+        this.flash.error('Could not delete post.');
+      },
+    });
   }
    
   onComment(postId: number, commentText: string) {
@@ -106,7 +172,7 @@ export class NewsfeedComponent implements OnInit {
       },
       error: (err) => {
         console.error('Comment failed', err);
-        alert('Could not post comment. Check if you are logged in.');
+        this.flash.warning('Could not post comment. Check if you are logged in.');
       }
     });
   }

@@ -1,4 +1,4 @@
-<div class="search-container">
+<div class="search-container py-4 px-2">
   <h2 class="h4 mb-3">Search Users</h2>
 
   <form (ngSubmit)="search()" class="search-box">
@@ -19,17 +19,20 @@
     Loading...
   </div>
 
-  <div *ngIf="!loading && hasSearched && users.length === 0" class="no-results alert alert-info py-2">
+  <div *ngIf="!loading && hasSearched && users.length === 0" class="no-results text-muted small py-2">
     No users found.
   </div>
 
-  <ul class="user-list" *ngIf="!loading && users.length > 0">
-    <li *ngFor="let user of users" class="user-card">
+  <ul class="user-list list-group" *ngIf="!loading && users.length > 0">
+    <li
+      *ngFor="let user of users"
+      class="user-card list-group-item border-0 shadow-sm"
+    >
       <div class="user-info">
         <img
           *ngIf="user.profileImage"
           [src]="imageBaseUrl + user.profileImage"
-          class="avatar"
+          class="avatar rounded-circle"
           alt=""
           onerror="this.style.display='none'"
         />
@@ -43,7 +46,7 @@
         </span>
       </div>
 
-      <div class="actions">
+      <div class="actions d-flex gap-2 flex-wrap justify-content-end">
         <button (click)="messageUser(user)" class="btn btn-sm btn-outline-primary">
           Message
         </button>
@@ -53,7 +56,7 @@
         </button>
       </div>
 
-      <div *ngIf="reportingUser?.userId === user.userId" class="report-form">
+      <div *ngIf="reportingUser?.userId === user.userId" class="report-form mt-2">
         <textarea
           [(ngModel)]="reportReason"
           name="reportReason"

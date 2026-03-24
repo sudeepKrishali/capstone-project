@@ -1,0 +1,18 @@
+.flash-container {
+  position: fixed;
+  /*
+   * Keep messages below the navbar without affecting layout.
+   * Bootstrap navbars are typically ~56px tall on desktop; ours adds a bit of padding.
+   */
+  top: calc(56px + 0.75rem);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92vw, 560px);
+  z-index: 1080;
+  pointer-events: none;
+}
+
+.flash-alert {
+  pointer-events: auto;
+}
+

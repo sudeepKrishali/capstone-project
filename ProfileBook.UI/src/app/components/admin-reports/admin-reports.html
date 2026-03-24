@@ -1,5 +1,5 @@
-<div class="admin-container">
-  <div class="card">
+<div class="admin-container py-4 px-2">
+  <div class="card shadow-sm">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h2 class="h5 mb-0">User Reports</h2>
       <span class="badge bg-primary-subtle text-primary" *ngIf="reports.length">
@@ -7,12 +7,12 @@
       </span>
     </div>
     <div class="card-body">
-      <div *ngIf="reports.length === 0" class="no-reports">
+      <div *ngIf="reports.length === 0" class="no-reports text-muted small mb-0">
         No reports to display.
       </div>
 
-      <div *ngFor="let report of reports" class="report-card">
-        <div class="report-info">
+      <div *ngFor="let report of reports" class="report-card list-group-item d-flex justify-content-between align-items-start gap-3">
+        <div class="report-info flex-grow-1 min-w-0">
           <p><strong>Report ID:</strong> {{ report.reportId }}</p>
           <p>
             <strong>Reported User ID:</strong> {{ report.reportedUserId }}
@@ -33,7 +33,7 @@
             <strong>Date:</strong> {{ report.timeStamp | date: 'medium' }}
           </p>
         </div>
-        <div class="report-actions text-end mt-2">
+        <div class="report-actions text-end mt-2 flex-shrink-0">
           <button
             type="button"
             class="btn btn-sm btn-outline-danger"

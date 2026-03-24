@@ -35,4 +35,12 @@ export class PostService {
   approvePost(postId: number): Observable<any> {
     return this.http.put(`${this.baseUrl}/approve/${postId}`, {});
   }
+
+  updatePost(postId: number, formData: FormData): Observable<Post> {
+    return this.http.put<Post>(`${this.baseUrl}/${postId}`, formData);
+  }
+
+  deletePost(postId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${postId}`);
+  }
 }

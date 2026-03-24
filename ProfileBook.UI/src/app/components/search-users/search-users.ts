@@ -5,6 +5,7 @@ import { ReportService } from '../../services/report';
 import { Router } from '@angular/router';
 import { User } from '../../models';
 import { environment } from '../../../environment';
+import { FlashMessageService } from '../../services/flash-message';
 
 @Component({
   selector: 'app-search-users',
@@ -26,7 +27,8 @@ export class SearchUsersComponent {
     private authService: AuthService,
     private reportService: ReportService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private flash: FlashMessageService
   ) {}
 
   get currentUserId(): number | null {
@@ -56,6 +58,7 @@ export class SearchUsersComponent {
       },
       error: () => {
         this.loading = false;
+        this.flash.error('Search failed. Please try again.');
         this.cdr.detectChanges();
       },
     });
@@ -83,13 +86,13 @@ export class SearchUsersComponent {
     if (!reported || currentId == null) return;
     this.reportService.reportUser(reported.userId, currentId, this.reportReason || undefined).subscribe({
       next: () => {
-        alert('User reported successfully.');
+        this.flash.success('User reported successfully.');
         this.cancelReport();
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(err);
-        alert('Failed to submit report.');
+        this.flash.error('Failed to submit report.');
         this.cdr.detectChanges();
       },
     });

@@ -32,10 +32,16 @@ public class GroupController(ApplicationDbContext context) : ControllerBase
         var group = await context.Groups.FindAsync(groupId);
         if (group == null) return NotFound("Group not found.");
 
-        var user = await context.Users.FindAsync(userId);
+        var user = await context.Users
+            .Include(u => u.Groups)
+            .FirstOrDefaultAsync(u => u.UserId == userId);
         if (user == null) return NotFound("User not found.");
 
-        user.GroupId = groupId;
+        user.Groups ??= new List<Group>();
+        var alreadyMember = user.Groups.Any(g => g.GroupId == groupId);
+        if (alreadyMember) return BadRequest("User is already in this group.");
+
+        user.Groups.Add(group);
         await context.SaveChangesAsync();
 
         return Ok(user);
@@ -45,12 +51,16 @@ public class GroupController(ApplicationDbContext context) : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> RemoveUserFromGroup(int groupId, int userId)
     {
-        var user = await context.Users.FindAsync(userId);
+        var user = await context.Users
+            .Include(u => u.Groups)
+            .FirstOrDefaultAsync(u => u.UserId == userId);
         if (user == null) return NotFound("User not found.");
 
-        if (user.GroupId != groupId) return BadRequest("User is not in this group.");
+        user.Groups ??= new List<Group>();
+        var targetGroup = user.Groups.FirstOrDefault(g => g.GroupId == groupId);
+        if (targetGroup == null) return BadRequest("User is not in this group.");
 
-        user.GroupId = null;
+        user.Groups.Remove(targetGroup);
         await context.SaveChangesAsync();
 
         return Ok(user);
@@ -72,15 +82,6 @@ public class GroupController(ApplicationDbContext context) : ControllerBase
             context.GroupMessages.RemoveRange(groupMessages);
         }
 
-        // Detach users from this group
-        var members = await context.Users
-            .Where(u => u.GroupId == groupId)
-            .ToListAsync();
-        foreach (var member in members)
-        {
-            member.GroupId = null;
-        }
-
         context.Groups.Remove(group);
         await context.SaveChangesAsync();
 
@@ -91,24 +92,36 @@ public class GroupController(ApplicationDbContext context) : ControllerBase
     [Authorize]
     public async Task<ActionResult<Group?>> GetCurrentUserGroup()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null) return Unauthorized();
+        var user = await GetCurrentUserWithGroups();
+        if (user == null) return Unauthorized();
 
-        if (!int.TryParse(userIdClaim, out var userId))
-        {
-            return Unauthorized();
-        }
-
-        var user = await context.Users.FindAsync(userId);
-        if (user == null) return NotFound("User not found.");
-
-        if (user.GroupId == null) return Ok(null);
+        var firstGroupId = user.Groups?
+            .OrderBy(g => g.GroupId)
+            .Select(g => (int?)g.GroupId)
+            .FirstOrDefault();
+        if (firstGroupId == null) return Ok(null);
 
         var group = await context.Groups
             .Include(g => g.GroupMembers)
-            .FirstOrDefaultAsync(g => g.GroupId == user.GroupId);
+            .FirstOrDefaultAsync(g => g.GroupId == firstGroupId);
 
         return group == null ? NotFound("Group not found.") : Ok(group);
+    }
+
+    [HttpGet("my-groups")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<Group>>> GetCurrentUserGroups()
+    {
+        var user = await GetCurrentUserWithGroups();
+        if (user == null) return Unauthorized();
+
+        var groups = await context.Groups
+            .Where(g => g.GroupMembers!.Any(m => m.UserId == user.UserId))
+            .Include(g => g.GroupMembers)
+            .OrderBy(g => g.GroupName)
+            .ToListAsync();
+
+        return Ok(groups);
     }
 
     [HttpGet("my-group/messages")]
@@ -119,11 +132,45 @@ public class GroupController(ApplicationDbContext context) : ControllerBase
         if (userIdClaim == null) return Unauthorized();
         if (!int.TryParse(userIdClaim, out var userId)) return Unauthorized();
 
-        var user = await context.Users.FindAsync(userId);
-        if (user == null || user.GroupId == null) return Ok(Array.Empty<GroupMessageResponse>());
+        var user = await context.Users
+            .Include(u => u.Groups!)
+            .FirstOrDefaultAsync(u => u.UserId == userId);
+        var firstGroupId = user?.Groups?
+            .OrderBy(g => g.GroupId)
+            .Select(g => (int?)g.GroupId)
+            .FirstOrDefault();
+        if (firstGroupId == null) return Ok(Array.Empty<GroupMessageResponse>());
 
         var messages = await context.GroupMessages
-            .Where(m => m.GroupId == user.GroupId)
+            .Where(m => m.GroupId == firstGroupId.Value)
+            .Include(m => m.Sender)
+            .OrderBy(m => m.TimeStamp)
+            .Select(m => new GroupMessageResponse
+            {
+                GroupMessageId = m.GroupMessageId,
+                GroupId = m.GroupId,
+                SenderId = m.SenderId,
+                SenderName = m.Sender != null ? m.Sender.Username : null,
+                MessageContent = m.MessageContent,
+                TimeStamp = m.TimeStamp
+            })
+            .ToListAsync();
+
+        return Ok(messages);
+    }
+
+    [HttpGet("my-groups/{groupId:int}/messages")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<GroupMessageResponse>>> GetMyGroupMessagesByGroup(int groupId)
+    {
+        var user = await GetCurrentUserWithGroups();
+        if (user == null) return Unauthorized();
+
+        var isMember = user.Groups?.Any(g => g.GroupId == groupId) == true;
+        if (!isMember) return Forbid();
+
+        var messages = await context.GroupMessages
+            .Where(m => m.GroupId == groupId)
             .Include(m => m.Sender)
             .OrderBy(m => m.TimeStamp)
             .Select(m => new GroupMessageResponse
@@ -163,8 +210,14 @@ public class GroupController(ApplicationDbContext context) : ControllerBase
         if (userIdClaim == null) return Unauthorized();
         if (!int.TryParse(userIdClaim, out var userId)) return Unauthorized();
 
-        var user = await context.Users.FindAsync(userId);
-        if (user == null || user.GroupId == null) return BadRequest("User is not in any group.");
+        var user = await context.Users
+            .Include(u => u.Groups!)
+            .FirstOrDefaultAsync(u => u.UserId == userId);
+        var firstGroupId = user?.Groups?
+            .OrderBy(g => g.GroupId)
+            .Select(g => (int?)g.GroupId)
+            .FirstOrDefault();
+        if (firstGroupId == null) return BadRequest("User is not in any group.");
 
         if (string.IsNullOrWhiteSpace(dto.MessageContent))
         {
@@ -173,7 +226,7 @@ public class GroupController(ApplicationDbContext context) : ControllerBase
 
         var message = new GroupMessage
         {
-            GroupId = user.GroupId.Value,
+            GroupId = firstGroupId.Value,
             SenderId = userId,
             MessageContent = dto.MessageContent.Trim(),
             TimeStamp = DateTime.Now
@@ -183,5 +236,45 @@ public class GroupController(ApplicationDbContext context) : ControllerBase
         await context.SaveChangesAsync();
 
         return Ok(message);
+    }
+
+    [HttpPost("my-groups/{groupId:int}/messages")]
+    [Authorize]
+    public async Task<ActionResult<GroupMessage>> SendMyGroupMessageToGroup(int groupId, [FromBody] GroupMessageDto dto)
+    {
+        var user = await GetCurrentUserWithGroups();
+        if (user == null) return Unauthorized();
+
+        var isMember = user.Groups?.Any(g => g.GroupId == groupId) == true;
+        if (!isMember) return Forbid();
+
+        if (string.IsNullOrWhiteSpace(dto.MessageContent))
+        {
+            return BadRequest("Message content is required.");
+        }
+
+        var message = new GroupMessage
+        {
+            GroupId = groupId,
+            SenderId = user.UserId,
+            MessageContent = dto.MessageContent.Trim(),
+            TimeStamp = DateTime.Now
+        };
+
+        context.GroupMessages.Add(message);
+        await context.SaveChangesAsync();
+
+        return Ok(message);
+    }
+
+    private async Task<User?> GetCurrentUserWithGroups()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null) return null;
+        if (!int.TryParse(userIdClaim, out var userId)) return null;
+
+        return await context.Users
+            .Include(u => u.Groups!)
+            .FirstOrDefaultAsync(u => u.UserId == userId);
     }
 }

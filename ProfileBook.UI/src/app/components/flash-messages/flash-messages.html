@@ -1,0 +1,21 @@
+<div class="flash-container" aria-live="polite" aria-atomic="true">
+  <div
+    *ngFor="let m of (flash.messages$ | async); trackBy: trackById"
+    class="alert alert-{{ m.type }} shadow-sm py-2 px-3 mb-2 flash-alert"
+    role="alert"
+  >
+    <div class="d-flex align-items-start gap-2">
+      <div class="flex-grow-1">
+        {{ m.text }}
+      </div>
+      <button
+        *ngIf="m.dismissible"
+        type="button"
+        class="btn-close"
+        aria-label="Close"
+        (click)="flash.dismiss(m.id)"
+      ></button>
+    </div>
+  </div>
+</div>
+

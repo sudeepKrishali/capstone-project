@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Group, User } from '../../models';
 import { GroupService } from '../../services/group';
 import { UserService } from '../../services/user';
+import { FlashMessageService } from '../../services/flash-message';
 
 @Component({
   selector: 'app-admin-groups',
@@ -18,13 +19,13 @@ export class AdminGroupsComponent implements OnInit {
   selectedGroupId: number | null = null;
   selectedUserId: number | null = null;
   loading = false;
-  error: string | null = null;
 
   constructor(
     private groupService: GroupService,
     private userService: UserService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private flash: FlashMessageService
   ) {}
 
   ngOnInit(): void {
@@ -41,7 +42,7 @@ export class AdminGroupsComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: () => {
-        this.error = 'Failed to load groups.';
+        this.flash.error('Failed to load groups.');
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -56,7 +57,7 @@ export class AdminGroupsComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: () => {
-        this.error = 'Failed to load users.';
+        this.flash.error('Failed to load users.');
         this.cdr.detectChanges();
       },
     });
@@ -81,9 +82,7 @@ export class AdminGroupsComponent implements OnInit {
       selectedGroup.groupMembers.map((m) => m.userId)
     );
 
-    this.availableUsers = this.users.filter(
-      (u) => !memberIds.has(u.userId)
-    );
+    this.availableUsers = this.users.filter((u) => !memberIds.has(u.userId));
   }
 
   createGroup(): void {
@@ -94,10 +93,11 @@ export class AdminGroupsComponent implements OnInit {
       next: () => {
         this.newGroupName = '';
         this.loadGroups();
+        this.flash.success('Group created.');
         this.cdr.detectChanges();
       },
       error: () => {
-        this.error = 'Failed to create group.';
+        this.flash.error('Failed to create group.');
         this.cdr.detectChanges();
       },
     });
@@ -107,16 +107,42 @@ export class AdminGroupsComponent implements OnInit {
     if (this.selectedGroupId == null || this.selectedUserId == null) {
       return;
     }
+    const assignedGroupId = this.selectedGroupId;
+    const assignedUserId = this.selectedUserId;
+
     this.groupService
-      .addUserToGroup(this.selectedGroupId, this.selectedUserId)
+      .addUserToGroup(assignedGroupId, assignedUserId)
       .subscribe({
         next: () => {
+          const selectedGroup = this.groups.find(
+            (g) => g.groupId === assignedGroupId
+          );
+          const assignedUser = this.users.find((u) => u.userId === assignedUserId);
+
+          // Keep local state in sync so the dropdown updates immediately.
+          if (selectedGroup && assignedUser) {
+            selectedGroup.groupMembers ??= [];
+            const alreadyMember = selectedGroup.groupMembers.some(
+              (member) => member.userId === assignedUserId
+            );
+            if (!alreadyMember) {
+              selectedGroup.groupMembers = [
+                ...selectedGroup.groupMembers,
+                assignedUser,
+              ];
+            }
+          }
+
+          if (this.selectedGroupId === assignedGroupId) {
+            this.selectedUserId = null;
+          }
+
           this.loadGroups();
           this.updateAvailableUsers();
           this.cdr.detectChanges();
         },
         error: () => {
-          this.error = 'Failed to assign user to group.';
+          this.flash.error('Failed to assign user to group.');
           this.cdr.detectChanges();
         },
       });
@@ -130,10 +156,11 @@ export class AdminGroupsComponent implements OnInit {
     this.groupService.removeUserFromGroup(groupId, userId).subscribe({
       next: () => {
         this.loadGroups();
+        this.flash.success('User removed from group.');
         this.cdr.detectChanges();
       },
       error: () => {
-        this.error = 'Failed to remove user from group.';
+        this.flash.error('Failed to remove user from group.');
         this.cdr.detectChanges();
       },
     });
@@ -146,10 +173,11 @@ export class AdminGroupsComponent implements OnInit {
     this.groupService.deleteGroup(groupId).subscribe({
       next: () => {
         this.loadGroups();
+        this.flash.success('Group deleted.');
         this.cdr.detectChanges();
       },
       error: () => {
-        this.error = 'Failed to delete group.';
+        this.flash.error('Failed to delete group.');
         this.cdr.detectChanges();
       },
     });

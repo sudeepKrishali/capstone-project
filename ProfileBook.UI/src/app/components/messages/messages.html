@@ -50,7 +50,11 @@
   <section class="chat-main">
     <ng-container *ngIf="chatUserId; else inboxPlaceholder">
       <div class="chat-header d-flex align-items-center gap-2 mb-2">
-        <button type="button" class="btn btn-link back-link d-md-none p-0 me-1" (click)="backToInbox()">
+        <button
+          type="button"
+          class="btn btn-link back-link d-md-none p-0 me-1"
+          (click)="backToInbox()"
+        >
           &larr; Chats
         </button>
         <h2 class="h5 mb-0">Chat with {{ otherUser?.username || 'User' }}</h2>
@@ -73,10 +77,17 @@
             type="text"
             class="form-control"
             [(ngModel)]="newMessage"
+            (ngModelChange)="onMessageInputChange()"
             placeholder="Type a message…"
             (keyup.enter)="sendMessage()"
           />
           <button type="button" class="btn btn-primary" (click)="sendMessage()">Send</button>
+        </div>
+        <div
+          *ngIf="messageError"
+          class="text-danger small mx-2 mx-md-3 mb-2"
+        >
+          {{ messageError }}
         </div>
       </div>
     </ng-container>

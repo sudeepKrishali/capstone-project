@@ -54,11 +54,10 @@ namespace ProfileBook.API.Data
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Group>()
-                .HasMany(g => g.GroupMembers!)
-                .WithOne(u => u.Group)
-                .HasForeignKey(u => u.GroupId)
-                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Groups!)
+                .WithMany(g => g.GroupMembers!)
+                .UsingEntity(j => j.ToTable("UserGroups"));
         }
     }
 }

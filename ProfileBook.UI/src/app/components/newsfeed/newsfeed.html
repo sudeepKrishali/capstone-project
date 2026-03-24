@@ -3,29 +3,80 @@
     Loading posts...
   </div>
 
-  <div *ngIf="!loading && posts.length === 0" class="alert alert-info">
+  <div *ngIf="!loading && posts.length === 0" class="text-muted small">
     No posts to show yet.
   </div>
 
   <div *ngFor="let post of posts" class="post-card card shadow-sm mb-3">
-    <div class="card-header d-flex align-items-center gap-2">
+    <div class="card-header d-flex align-items-center gap-2 flex-wrap">
       <img
         [src]="imageBaseUrl + post.user?.profileImage"
-        class="avatar"
+        class="avatar rounded-circle border border-light shadow-sm"
         alt="profile"
       />
-      <div class="d-flex flex-column">
+      <div class="d-flex flex-column flex-grow-1 min-w-0">
         <strong>{{ post.user?.username || 'User' }}</strong>
+      </div>
+      <div
+        *ngIf="isOwnPost(post) && editingPostId !== post.postId"
+        class="post-owner-actions d-flex gap-1 ms-auto"
+      >
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary"
+          (click)="startEdit(post)"
+        >
+          Edit
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-danger"
+          (click)="deletePost(post.postId)"
+        >
+          Delete
+        </button>
       </div>
     </div>
 
+    <div class="card-body" *ngIf="editingPostId === post.postId; else postViewBody">
+      <textarea
+        class="form-control mb-2"
+        rows="3"
+        [(ngModel)]="editContent"
+        placeholder="Post text"
+      ></textarea>
+      <label class="form-label small text-muted mb-1">Replace image (optional)</label>
+      <input
+        type="file"
+        class="form-control form-control-sm mb-2"
+        accept="image/*"
+        (change)="onEditImageSelected($event)"
+      />
+      <div class="d-flex gap-2">
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          (click)="saveEdit(post.postId)"
+        >
+          Save
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-secondary btn-sm"
+          (click)="cancelEdit()"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+    <ng-template #postViewBody>
     <div class="card-body">
       <p class="mb-2">{{ post.content }}</p>
 
       <img
         *ngIf="post.postImage"
         [src]="imageBaseUrl + post.postImage"
-        class="post-image img-fluid rounded mb-2"
+        class="post-image img-fluid rounded mb-2 shadow-sm"
         alt="Post image"
       />
 
@@ -39,12 +90,15 @@
           }"
           (click)="onLike(post.postId)"
         >
-          Like ({{ post.likes.length || 0 }})
+          Like ({{ post.likes?.length || 0 }})
         </button>
       </div>
 
       <div class="comments-section">
-        <div *ngFor="let comment of post.comments" class="comment mb-1">
+        <div
+          *ngFor="let comment of post.comments || []"
+          class="comment mb-1 p-2 bg-light rounded-3 border"
+        >
           <strong>
             <span *ngIf="comment.userId === currentUserId; else otherUser">
               You
@@ -57,7 +111,7 @@
           <span class="ms-1">{{ comment.text }}</span>
         </div>
 
-        <div class="comment-input input-group mt-2">
+        <div class="comment-input input-group input-group-sm mt-2">
           <input
             #commentInput
             type="text"
@@ -66,7 +120,7 @@
           />
           <button
             type="button"
-            class="btn btn-primary"
+            class="btn btn-primary btn-sm"
             (click)="onComment(post.postId, commentInput.value); commentInput.value=''"
           >
             Post
@@ -74,5 +128,6 @@
         </div>
       </div>
     </div>
+    </ng-template>
   </div>
 </div>

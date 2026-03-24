@@ -1,20 +1,28 @@
-<div class="create-post-container">
+<div class="create-post-container py-3 px-2">
   <div class="card shadow-sm">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h2 class="h5 mb-0">Create New Post</h2>
       <span class="text-muted small">Posts go to admin for approval</span>
     </div>
     <div class="card-body">
-      <form (submit)="onSubmit()">
+      <form [formGroup]="postForm" (ngSubmit)="onSubmit()">
         <div class="mb-3">
           <label class="form-label">What&apos;s on your mind?</label>
           <textarea
             class="form-control"
-            [(ngModel)]="content"
-            name="content"
+            formControlName="content"
             placeholder="Share an update, thought, or announcement..."
             rows="4"
           ></textarea>
+          <div
+            *ngIf="
+              postForm.get('content')?.invalid &&
+              (postForm.get('content')?.touched || submitted)
+            "
+            class="text-danger small mt-1"
+          >
+            Content is required.
+          </div>
         </div>
 
         <div class="mb-3">
@@ -26,6 +34,15 @@
             (change)="onFileSelected($event)"
             accept="image/*"
           />
+          <div
+            *ngIf="
+              postForm.get('image')?.invalid &&
+              (postForm.get('image')?.touched || submitted)
+            "
+            class="text-danger small mt-1"
+          >
+            Please select an image.
+          </div>
         </div>
 
         <button type="submit" class="btn btn-primary w-100">

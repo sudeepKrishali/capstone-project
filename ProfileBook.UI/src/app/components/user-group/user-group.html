@@ -1,34 +1,45 @@
-<div class="user-group-container">
+<div class="user-group-container py-4 px-2">
   <div class="card shadow-sm mb-3">
     <div class="card-header d-flex justify-content-between align-items-center">
-      <h2 class="h5 mb-0">My Group</h2>
+      <h2 class="h5 mb-0">My Groups</h2>
     </div>
     <div class="card-body">
       <div *ngIf="loading" class="text-muted small mb-2">
-        Loading your group...
-      </div>
-      <div *ngIf="error" class="alert alert-danger py-2">
-        {{ error }}
+        Loading your groups...
       </div>
 
-      <div *ngIf="!loading && !group" class="text-muted">
-        You are not assigned to any group.
+      <div *ngIf="!loading && groups.length === 0" class="text-muted">
+        You are not assigned to any groups.
       </div>
 
-      <div *ngIf="!loading && group" class="group-card border-0 p-0">
-        <h3 class="h6 mb-2">{{ group.groupName }}</h3>
+      <div *ngIf="!loading && groups.length > 0" class="mb-3">
+        <label class="form-label">Select Group</label>
+        <select
+          class="form-select"
+          [(ngModel)]="selectedGroupId"
+          name="selectedGroupId"
+          (ngModelChange)="onGroupChange()"
+        >
+          <option *ngFor="let g of groups" [ngValue]="g.groupId">
+            {{ g.groupName }} ({{ g.groupMembers?.length || 0 }} members)
+          </option>
+        </select>
+      </div>
+
+      <div *ngIf="!loading && selectedGroup" class="group-card border-0 p-0">
+        <h3 class="h6 mb-2">{{ selectedGroup.groupName }}</h3>
         <p
-          *ngIf="!group.groupMembers || group.groupMembers.length === 0"
+          *ngIf="!selectedGroup.groupMembers || selectedGroup.groupMembers.length === 0"
           class="text-muted small mb-0"
         >
           No members in this group yet.
         </p>
         <ul
-          *ngIf="group.groupMembers && group.groupMembers.length > 0"
+          *ngIf="selectedGroup.groupMembers && selectedGroup.groupMembers.length > 0"
           class="list-unstyled mb-0"
         >
           <li
-            *ngFor="let member of group.groupMembers"
+            *ngFor="let member of selectedGroup.groupMembers"
             class="d-flex justify-content-between align-items-center py-1 border-bottom small"
           >
             <span>{{ member.username }}</span>
@@ -44,19 +55,19 @@
     </div>
   </div>
 
-  <div *ngIf="group" class="group-messages card">
+  <div *ngIf="selectedGroup" class="group-messages card shadow-sm">
     <div class="card-header">
-      <h3 class="h6 mb-0">Group Messages</h3>
+      <h3 class="h6 mb-0">Group Messages - {{ selectedGroup.groupName }}</h3>
     </div>
     <div class="card-body">
       <div class="group-messages-list" #groupMessagesList>
         <div *ngIf="groupMessages.length === 0" class="text-muted small mb-2">
           No messages yet.
         </div>
-        <ul *ngIf="groupMessages.length > 0" class="list-unstyled mb-3">
+        <ul *ngIf="groupMessages.length > 0" class="list-group list-group-flush mb-3">
         <li
           *ngFor="let msg of groupMessages"
-          class="group-message-item mb-2 small"
+          class="group-message-item list-group-item border-0 mb-2 small"
           [ngClass]="{
             'from-current': msg.senderId === currentUserId,
             'from-other': msg.senderId !== currentUserId
@@ -92,6 +103,12 @@
         <button class="btn btn-primary" (click)="sendGroupMessage()">
           Send
         </button>
+      </div>
+      <div
+        *ngIf="groupMessageError"
+        class="text-danger small mt-2 px-1 px-md-2"
+      >
+        {{ groupMessageError }}
       </div>
     </div>
   </div>

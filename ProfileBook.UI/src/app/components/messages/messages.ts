@@ -7,6 +7,7 @@ import { ConversationSummary, Message, User } from '../../models';
 import { MessageRealtimeService } from '../../services/message-realtime';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environment';
+import { FlashMessageService } from '../../services/flash-message';
 
 @Component({
   selector: 'app-messages',
@@ -23,6 +24,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   newMessage = '';
   loadingChat = false;
   chatUserId: number | null = null;
+  messageError: string | null = null;
 
   imageBaseUrl = environment.apiUrl.replace('/api', '');
 
@@ -37,7 +39,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
     private messageRealtimeService: MessageRealtimeService,
     private userService: UserService,
     private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private flash: FlashMessageService
   ) {}
 
   get currentUserId(): number | null {
@@ -64,7 +67,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
           await this.messageRealtimeService.joinUserChannel(currentId);
         }
       })
-      .catch((err) => console.error('[MessagesComponent] SignalR connect failed', err));
+      .catch((err) => {
+        console.error('[MessagesComponent] SignalR connect failed', err);
+        this.flash.warning('Realtime messaging connection failed. Messages may not update instantly.');
+      });
 
     this.realtimeSub = this.messageRealtimeService.incomingMessages$().subscribe((msg) => {
       const currentId = this.currentUserId;
@@ -105,12 +111,14 @@ export class MessagesComponent implements OnInit, OnDestroy {
       if (userIdParam) {
         const userId = +userIdParam;
         this.chatUserId = userId;
+        this.messageError = null;
         this.loadChat(userId);
       } else {
         this.chatUserId = null;
         this.otherUser = null;
         this.messages = [];
         this.loadingChat = false;
+        this.messageError = null;
         this.cdr.detectChanges();
       }
     });
@@ -180,6 +188,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       error: () => {
         this.conversations = [];
         this.conversationsLoading = false;
+        this.flash.error('Failed to load conversations.');
         this.cdr.detectChanges();
       },
     });
@@ -212,6 +221,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
           error: () => {
             this.messages = [];
             this.loadingChat = false;
+            this.flash.error('Failed to load chat messages.');
             this.cdr.detectChanges();
           },
         });
@@ -220,6 +230,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
         this.otherUser = null;
         this.messages = [];
         this.loadingChat = false;
+        this.flash.error('Failed to load chat.');
         this.cdr.detectChanges();
       },
     });
@@ -228,21 +239,39 @@ export class MessagesComponent implements OnInit, OnDestroy {
   sendMessage(): void {
     const text = this.newMessage.trim();
     const currentId = this.currentUserId;
-    if (!text || !this.otherUser || currentId == null) return;
+    this.messageError = null;
+    if (!text) {
+      this.messageError = 'Message is required.';
+      this.cdr.detectChanges();
+      return;
+    }
+    if (!this.otherUser || currentId == null) {
+      this.messageError = 'Please select a conversation first.';
+      this.cdr.detectChanges();
+      return;
+    }
     this.messageService.sendMessage(currentId, this.otherUser.userId, text).subscribe({
       next: (msg) => {
         if (!this.messages.some((m) => m.messageId === msg.messageId)) {
           this.messages = [...this.messages, msg];
         }
         this.newMessage = '';
+        this.messageError = null;
         this.applyOutgoingToConversationPreview(msg, currentId);
         this.cdr.detectChanges();
         this.scrollToBottom();
       },
       error: () => {
-        alert('Failed to send message.');
+        this.flash.error('Failed to send message.');
+        this.cdr.detectChanges();
       },
     });
+  }
+
+  onMessageInputChange(): void {
+    if (this.messageError) {
+      this.messageError = null;
+    }
   }
 
   private applyOutgoingToConversationPreview(msg: Message, currentId: number): void {

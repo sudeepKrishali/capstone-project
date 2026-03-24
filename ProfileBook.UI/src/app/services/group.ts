@@ -33,12 +33,18 @@ export class GroupService {
     return this.http.get<Group | null>(`${this.baseUrl}/my-group`);
   }
 
-  getMyGroupMessages(): Observable<GroupMessage[]> {
-    return this.http.get<GroupMessage[]>(`${this.baseUrl}/my-group/messages`);
+  getMyGroups(): Observable<Group[]> {
+    return this.http.get<Group[]>(`${this.baseUrl}/my-groups`);
   }
 
-  sendMyGroupMessage(content: string): Observable<GroupMessage> {
-    return this.http.post<GroupMessage>(`${this.baseUrl}/my-group/messages`, {
+  getMyGroupMessages(groupId: number): Observable<GroupMessage[]> {
+    return this.http.get<GroupMessage[]>(
+      `${this.baseUrl}/my-groups/${groupId}/messages`
+    );
+  }
+
+  sendMyGroupMessage(groupId: number, content: string): Observable<GroupMessage> {
+    return this.http.post<GroupMessage>(`${this.baseUrl}/my-groups/${groupId}/messages`, {
       messageContent: content,
     });
   }

@@ -1,4 +1,4 @@
-<div class="register-container">
+<div class="register-container py-4 px-2">
   <div class="card shadow-sm register-card">
     <div class="card-body">
       <h2 class="h4 mb-3 text-center">
@@ -8,10 +8,28 @@
         <div class="mb-3">
           <label class="form-label">Username</label>
           <input type="text" class="form-control" formControlName="username" />
+          <div
+            *ngIf="
+              registerForm.get('username')?.invalid &&
+              (registerForm.get('username')?.touched || submitted)
+            "
+            class="text-danger small mt-1"
+          >
+            Username is required.
+          </div>
         </div>
         <div class="mb-3">
           <label class="form-label">Password</label>
           <input type="password" class="form-control" formControlName="password" />
+          <div
+            *ngIf="
+              registerForm.get('password')?.invalid &&
+              (registerForm.get('password')?.touched || submitted)
+            "
+            class="text-danger small mt-1"
+          >
+            Password must be at least 6 characters.
+          </div>
         </div>
         <div class="mb-3">
           <label class="form-label">Profile image</label>
@@ -20,11 +38,19 @@
             class="form-control"
             (change)="onFileSelected($event)"
           />
+          <div
+            *ngIf="
+              registerForm.get('profileImage')?.invalid &&
+              (registerForm.get('profileImage')?.touched || submitted)
+            "
+            class="text-danger small mt-1"
+          >
+            Profile image is required.
+          </div>
         </div>
         <button
           type="submit"
           class="btn btn-primary w-100"
-          [disabled]="registerForm.invalid"
         >
           Register
         </button>

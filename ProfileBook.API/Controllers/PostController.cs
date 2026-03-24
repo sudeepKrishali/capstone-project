@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProfileBook.API.Data;
@@ -70,8 +70,89 @@ public class PostController(ApplicationDbContext context) : ControllerBase
 
         return Ok(post);
     }
+
+    [Authorize]
+    [HttpPut("{id}")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UpdatePost(int id, [FromForm] PostUpdateDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null) return Unauthorized("User session invalid.");
+
+        var post = await context.Posts.FindAsync(id);
+        if (post == null) return NotFound();
+
+        var userId = int.Parse(userIdClaim);
+        if (post.UserId != userId) return Forbid();
+
+        if (dto.Content != null)
+            post.Content = dto.Content;
+
+        if (dto.Image is { Length: > 0 })
+        {
+            TryDeletePostImageFile(post.PostImage);
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+            var uniqueFileName = $"{Guid.NewGuid()}_{dto.Image.FileName}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+            await using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await dto.Image.CopyToAsync(stream);
+            }
+
+            post.PostImage = "/uploads/" + uniqueFileName;
+        }
+
+        await context.SaveChangesAsync();
+        return Ok(post);
+    }
+
+    [Authorize]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeletePost(int id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null) return Unauthorized("User session invalid.");
+
+        var post = await context.Posts.FindAsync(id);
+        if (post == null) return NotFound();
+
+        if (post.UserId != int.Parse(userIdClaim)) return Forbid();
+
+        TryDeletePostImageFile(post.PostImage);
+        context.Posts.Remove(post);
+        await context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    static void TryDeletePostImageFile(string? postImageRelative)
+    {
+        if (string.IsNullOrEmpty(postImageRelative)) return;
+        var relative = postImageRelative.TrimStart('/');
+        if (!relative.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase)) return;
+
+        var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relative);
+        try
+        {
+            if (System.IO.File.Exists(fullPath))
+                System.IO.File.Delete(fullPath);
+        }
+        catch
+        {
+            // Ignore file IO errors so DB delete still succeeds
+        }
+    }
+
     // DTO class for creating a post with an image
     public class PostCreateDto
+    {
+        public string? Content { get; set; }
+        public IFormFile? Image { get; set; }
+    }
+
+    public class PostUpdateDto
     {
         public string? Content { get; set; }
         public IFormFile? Image { get; set; }

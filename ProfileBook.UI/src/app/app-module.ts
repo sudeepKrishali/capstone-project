@@ -18,6 +18,7 @@ import { SearchUsersComponent } from './components/search-users/search-users';
 import { MessagesComponent } from './components/messages/messages';
 import { AdminGroupsComponent } from './components/admin-groups/admin-groups';
 import { UserGroupComponent } from './components/user-group/user-group';
+import { FlashMessagesComponent } from './components/flash-messages/flash-messages';
 
 @NgModule({
   declarations: [
@@ -33,6 +34,7 @@ import { UserGroupComponent } from './components/user-group/user-group';
     MessagesComponent,
     AdminGroupsComponent,
     UserGroupComponent,
+    FlashMessagesComponent,
   ],
   imports: [BrowserModule, AppRoutingModule, ReactiveFormsModule, RouterModule, FormsModule],
   providers: [

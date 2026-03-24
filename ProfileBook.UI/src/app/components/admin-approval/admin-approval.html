@@ -1,5 +1,5 @@
-<div class="admin-container">
-  <div class="card admin-card">
+<div class="admin-container py-4 px-2">
+  <div class="card admin-card shadow-sm">
     <div class="card-header admin-card-header d-flex justify-content-between align-items-center">
       <h2 class="h5 mb-0">Pending Post Approvals</h2>
       <span class="badge bg-primary-subtle text-primary" *ngIf="pendingPosts.length > 0">
@@ -8,12 +8,12 @@
     </div>
 
     <div class="card-body">
-      <div *ngIf="pendingPosts.length === 0" class="no-posts">
+      <div *ngIf="pendingPosts.length === 0" class="no-posts text-muted small mb-0">
         No posts awaiting approval.
       </div>
 
-      <div *ngFor="let post of pendingPosts" class="approval-card">
-        <div class="post-info">
+      <div *ngFor="let post of pendingPosts" class="approval-card list-group-item d-flex justify-content-between align-items-start gap-3">
+        <div class="post-info flex-grow-1 min-w-0">
           <p class="mb-1">
             <strong>User:</strong> {{ post.user?.username || 'Unknown' }}
           </p>
@@ -22,10 +22,10 @@
             *ngIf="post.postImage"
             [src]="'https://localhost:7048' + post.postImage"
             alt="Post image preview"
-            class="preview-img"
+            class="preview-img img-thumbnail"
           />
         </div>
-        <button (click)="approvePost(post.postId)" class="approve-btn">
+        <button type="button" (click)="approvePost(post.postId)" class="btn btn-primary btn-sm approve-btn">
           Approve Post
         </button>
       </div>
